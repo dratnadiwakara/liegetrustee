@@ -1,0 +1,4 @@
+investor_id_no,investor_name,investor_address,investor_nic,investor_account_no,investor_account_branch,investor_account_bank,investor_email,investor_phone
+1,DFCC Bank,Colombo 03,,123,Colombo,COMB,inv1@email.com,46464646
+2,EPF,Colombo 01,,4345,Kandy,HNB,inv2@email.com,464646418
+3,Donald Trump,United States,880808080V,553453,Colombo,NTB,inv4@email.com,98976464

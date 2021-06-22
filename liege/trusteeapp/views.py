@@ -1,9 +1,10 @@
+from .models import Investor
 from django.shortcuts import redirect, render
 from django.http import HttpResponse
 from .forms import *
-from django.utils.crypto import get_random_string
+#from django.utils.crypto import get_random_string
 import pandas as pd
-from django_tables2.tables import Table
+import django_tables2 as tables
 import os
 
 # Create your views here.
@@ -12,6 +13,9 @@ def index(response):
     return HttpResponse("test")
 
 
+class InvestorTable(tables.Table):
+    class Meta:
+        model = Investor 
 
 def create_borrower_view(request):
     form = borrower_form(request.POST or None)
@@ -66,6 +70,7 @@ def update_securitization_arranger_view(request,id):
         print(request.POST['formtype'])
         if form.is_valid():
             sec = form.save(commit=False)
+            #### better method to check if the file exists
             if(sec.td_firstdraft.name != ""):
                 sec.td_firstdraft.name = "td_firstdraft_"+str(sec.id)+"."+str(sec.td_firstdraft).split(".")[1].lower()    
             if(sec.td_completedraft.name != ""):
@@ -88,13 +93,34 @@ def update_securitization_arranger_view(request,id):
                 "trust_bank_account_branch":sec.trust_bank_account_branch,
                 "trust_bank_account_bank":sec.trust_bank_account_bank,
                 "cashflow_checked":sec.cashflow_checked,
-                "trustee_approved":sec.trustee_approved}
+                "trustee_approved":sec.trustee_approved,
+                "investor_set":InvestorTable(sec.investor_set.all()),
+                "investor_count":sec.investor_set.all().count()}
 
+    print(sec.investor_set.all().count())
 
     if request.method=="POST" and request.POST['formtype']=="addinvestors":
-        investorfile = request.FILES['investor_file']
-        investor_table = pd.read_csv(investorfile)
-        investor_table_html = investor_table.to_html()
-        context["investor_table_html"] = investor_table_html
+        if request.FILES.get('investor_file', False)!=False:
+            #### Validate if the file is correct format
+            sec.investor_schedule_file =request.FILES['investor_file']
+            sec.investor_schedule_file.name = "investor_schedule_file_"+str(sec.id)+"."+str(sec.investor_schedule_file).split(".")[1].lower()    
+            sec.save()
+            investor_table = pd.read_csv(sec.investor_schedule_file)
+            #### Convert this to a django-table2
+            #investor_table_html = InvestorTable(investor_table.to_dict(orient='list'))
+            investor_table_html = investor_table.to_html()
+            context["investor_table_html"] = investor_table_html
+
+    if request.method=="POST" and request.POST['formtype']=="confirm_investors":
+        investor_table = pd.read_csv(sec.investor_schedule_file)
+        lst = list(investor_table)
+        investor_table[lst] = investor_table[lst].astype(str)
+        for index, row in investor_table.iterrows():
+            inv = Investor(securitization=sec,investor_id_no=row['investor_id_no'],investor_name=row['investor_name'],
+                            investor_address=row['investor_address'],investor_nic=row['investor_nic'],investor_account_no=row['investor_account_no'],
+                            investor_account_branch=row['investor_account_branch'],investor_account_bank=row['investor_account_bank'],
+                            investor_email=row['investor_email'],investor_phone=row['investor_phone'])
+            inv.save()
+        
 
     return render(request,"trusteeapp/update_securitization_arranger.html",context)

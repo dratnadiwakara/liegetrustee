@@ -1,3 +1,4 @@
+{% load django_tables2 %}
 <h3>Update Securitization Arranger</h3>
     <h4>Deal Name: {{temp_name}}</h4>
     <h5>Borrower: {{borrower_name}}</h5>
@@ -15,7 +16,12 @@
         <button type="submit" name="save" class="btn btn-success">Update Securitization</button>
     </form>
 
-    <!-- Add Investor Form -->
+     
+
+    {% render_table investor_set %}
+
+    {% ifequal investor_count 0 %}
+    <!-- Add Investor Form: Only allow once. Check if there are already investors and display of not-->
     <h3>Add Investors</h3>
     <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
@@ -25,9 +31,10 @@
     </form>
 
     {% if investor_table_html %}
-    <form method="POST" enctype="multipart/form-data">
+    <form method="POST" enctype="multipart/form-data">{% csrf_token %}
         <input type="hidden" name="formtype" value="confirm_investors">
         <input type="submit" value="Confirm Investors">
     </form>
 {{investor_table_html|safe}}
     {% endif %}
+{% endifequal %}
