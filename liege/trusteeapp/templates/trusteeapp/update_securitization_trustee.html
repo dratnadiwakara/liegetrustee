@@ -9,5 +9,6 @@
     
     <form method="POST"  enctype="multipart/form-data"> {% csrf_token %}
         {{form.as_p}}
+        <input type="hidden" name="formtype" value="update"/>
         <button type="submit",name="save" class="btn btn-success">Update Securitization</button>
     </form>

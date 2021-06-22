@@ -7,7 +7,27 @@
     <p>trust_bank_account_bank: {{trust_bank_account_bank}}</p>
     <p>trustee_approved: {{trustee_approved}}</p>
     <p>cashflow_checked: {{cashflow_checked}}</p>
+
+    <!-- Update Form -->
     <form method="POST"  enctype="multipart/form-data"> {% csrf_token %}
         {{form.as_p}}
-        <button type="submit",name="save" class="btn btn-success">Update Securitization</button>
+        <input type="hidden" name="formtype" value="update"/>
+        <button type="submit" name="save" class="btn btn-success">Update Securitization</button>
     </form>
+
+    <!-- Add Investor Form -->
+    <h3>Add Investors</h3>
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="formtype" value="addinvestors"/>
+        <input type="file" name="investor_file">
+        <input type="submit" value="Upload">
+    </form>
+
+    {% if investor_table_html %}
+    <form method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="formtype" value="confirm_investors">
+        <input type="submit" value="Confirm Investors">
+    </form>
+{{investor_table_html|safe}}
+    {% endif %}

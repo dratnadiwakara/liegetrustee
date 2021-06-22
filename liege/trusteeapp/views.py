@@ -2,6 +2,9 @@ from django.shortcuts import redirect, render
 from django.http import HttpResponse
 from .forms import *
 from django.utils.crypto import get_random_string
+import pandas as pd
+from django_tables2.tables import Table
+import os
 
 # Create your views here.
 
@@ -34,7 +37,7 @@ def update_securitization_trustee_view(request,id):
     sec = Securitization.objects.get(id=id)
     form = update_securitization_trustee_form(instance=sec)
 
-    if request.method=="POST":
+    if request.method=="POST" and request.POST['formtype']=="update":
         form = update_securitization_trustee_form(request.POST,instance=sec)
         
         if form.is_valid():
@@ -56,11 +59,11 @@ def update_securitization_arranger_view(request,id):
     sec = Securitization.objects.get(id=id)
     form = update_securitization_arranger_form(instance=sec)
 
-    print(sec.td_firstdraft.name=="")
+    #print(request.POST['formtype'])
 
-    if request.method=="POST":
+    if request.method=="POST" and request.POST['formtype']=="update":
         form = update_securitization_arranger_form(request.POST,request.FILES,instance=sec)
-        
+        print(request.POST['formtype'])
         if form.is_valid():
             sec = form.save(commit=False)
             if(sec.td_firstdraft.name != ""):
@@ -86,5 +89,12 @@ def update_securitization_arranger_view(request,id):
                 "trust_bank_account_bank":sec.trust_bank_account_bank,
                 "cashflow_checked":sec.cashflow_checked,
                 "trustee_approved":sec.trustee_approved}
+
+
+    if request.method=="POST" and request.POST['formtype']=="addinvestors":
+        investorfile = request.FILES['investor_file']
+        investor_table = pd.read_csv(investorfile)
+        investor_table_html = investor_table.to_html()
+        context["investor_table_html"] = investor_table_html
 
     return render(request,"trusteeapp/update_securitization_arranger.html",context)
