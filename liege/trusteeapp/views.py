@@ -1,4 +1,4 @@
-from .models import Investor
+from .models import Investor,Investment,Transfer
 from django.shortcuts import redirect, render
 from django.http import HttpResponse
 from .forms import *
@@ -6,7 +6,7 @@ from .forms import *
 import pandas as pd
 import django_tables2 as tables
 import os
-
+import datetime
 # Create your views here.
 
 def index(response):
@@ -16,6 +16,17 @@ def index(response):
 class InvestorTable(tables.Table):
     class Meta:
         model = Investor 
+        exclude=('id','securitization')
+
+class InvestmentTable(tables.Table):
+    class Meta:
+        model = Investment 
+        exclude=('id','securitization')
+
+class TransferTable(tables.Table):
+    class Meta:
+        model = Transfer 
+        exclude=('id','securitization')
 
 def create_borrower_view(request):
     form = borrower_form(request.POST or None)
@@ -95,9 +106,12 @@ def update_securitization_arranger_view(request,id):
                 "cashflow_checked":sec.cashflow_checked,
                 "trustee_approved":sec.trustee_approved,
                 "investor_set":InvestorTable(sec.investor_set.all()),
-                "investor_count":sec.investor_set.all().count()}
+                "investment_set":InvestmentTable(sec.investment_set.all()),
+                "investor_count":sec.investor_set.all().count(),
+                "investment_count":sec.investment_set.all().count(),
+                "transfer_set":sec.transfer_set.all().order_by('transfer_date')}
 
-    print(sec.investor_set.all().count())
+    #print(sec.investor_set.all().count())
 
     if request.method=="POST" and request.POST['formtype']=="addinvestors":
         if request.FILES.get('investor_file', False)!=False:
@@ -121,6 +135,81 @@ def update_securitization_arranger_view(request,id):
                             investor_account_branch=row['investor_account_branch'],investor_account_bank=row['investor_account_bank'],
                             investor_email=row['investor_email'],investor_phone=row['investor_phone'])
             inv.save()
+    
+    if request.method=="POST" and request.POST['formtype']=="addinvestments":
+        if request.FILES.get('investments_file', False)!=False:
+            #### Validate if the file is correct format
+            #### cross check maturity amount if interest rate type = 1
+            #### cross check days_to_maturity
+            sec.investments_file =request.FILES['investments_file']
+            sec.investments_file.name = "investments_file_"+str(sec.id)+"."+str(sec.investor_schedule_file).split(".")[1].lower()    
+            sec.save()
+            print(sec.investments_file.name)
+            investments_table = pd.read_csv(sec.investments_file)
+            #### Convert this to a django-table2
+            #investor_table_html = InvestorTable(investor_table.to_dict(orient='list'))
+            investments_table_html = investments_table.to_html()
+            context["investments_table_html"] = investments_table_html
         
+    if request.method=="POST" and request.POST['formtype']=="confirm_investments":
+        investment_table = pd.read_csv(sec.investments_file)
+        investment_table = investment_table.rename(columns={'investment_date_year':'year','investment_date_month':'month','investment_date_date':'day'})
+        investment_table['investment_date'] = pd.to_datetime(investment_table[['year','month','day']])
+        investment_table = investment_table.drop(['year','month','day'], axis = 1)
+        investment_table = investment_table.rename(columns={'maturity_date_year':'year','maturity_date_month':'month','maturity_date_date':'day'})
+        investment_table['maturity_date'] = pd.to_datetime(investment_table[['year','month','day']])
+        
+        investor_cashflows = investment_table.groupby(['investor_id_no','investment_date'],as_index=False)['investment_amount'].sum() 
+        for index, row in investor_cashflows.iterrows():
+            investor = sec.investor_set.get(investor_id_no=row['investor_id_no']) 
+            trans = Transfer(securitization=sec,
+                             investor=investor,
+                             amount=row['investment_amount'],
+                             transfer_date = row['investment_date'])
+            trans.save()
 
+        temp = investor_cashflows.groupby(['investment_date'],as_index=False)['investment_amount'].sum() 
+        temp['investment_amount'] = -1*temp['investment_amount']
+        temp = temp.rename(columns={'investment_date':'maturity_date','investment_amount':'maturity_value'})
+        borrower_cashflows = investment_table.groupby(['maturity_date'],as_index=False)['maturity_value'].sum() #### use the maturity amount calculated, not the one uploaded
+        borrower_cashflows = borrower_cashflows.append(temp,ignore_index=True)
+
+        for index, row in borrower_cashflows.iterrows():
+            trans = Transfer(securitization=sec,
+                             borrower=sec.borrower,
+                             amount=row['maturity_value'],
+                             transfer_date = row['maturity_date'])
+            trans.save()
+
+        for index, row in investment_table.iterrows():
+            investor = sec.investor_set.get(investor_id_no=row['investor_id_no']) 
+
+            trans = Transfer(securitization=sec,
+                             investor=investor,
+                             amount= -1*row['maturity_value'],
+                             transfer_date = row['maturity_date'])
+            trans.save()
+
+            if row['interest_rate_type']==1:
+                inv = Investment(securitization=sec,
+                                investor=investor,
+                                investment_date = row['investment_date'],
+                                maturity_date = row['maturity_date'],
+                                investment_amount = row['investment_amount'],
+                                interest_rate_type = row['interest_rate_type'],
+                                fixed_interest_rate = row['fixed_interest_rate'],
+                                )
+            if row['interest_rate_type']==2:
+                inv = Investment(securitization=sec,
+                                investor=investor,
+                                investment_date = row['investment_date'],
+                                maturity_date = row['maturity_date'],                                investment_amount = row['investment_amount'],
+                                interest_rate_type = row['interest_rate_type'],
+                                variable_rate_spread = row['variable_rate_spread'],
+                                variable_rate_reset_freq = row['variable_rate_reset_freq'],
+                                variable_rate_floor = row['variable_rate_floor'],
+                                variable_rate_cap = row['variable_rate_cap'],
+                                )
+                        
+            inv.save()
     return render(request,"trusteeapp/update_securitization_arranger.html",context)

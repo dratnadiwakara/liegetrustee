@@ -1,6 +1,8 @@
 from django.db import models
 from django.db.models.deletion import CASCADE, PROTECT
 from django.utils.crypto import get_random_string
+from django.core.validators import MaxValueValidator, MinValueValidator
+
 
 # Create your models here.
 class Borrower(models.Model):
@@ -38,6 +40,7 @@ class Securitization(models.Model):
     audit_report = models.FileField(blank=True) 
     investor_schedule_file = models.FileField(blank=True) 
     investments_file = models.FileField(blank=True) 
+    trust_certificates = models.FileField(blank=True) 
 
 
     def __str__(self):
@@ -59,3 +62,30 @@ class Investor(models.Model):
 
     def __str__(self):
         return self.investor_name
+
+
+class Investment(models.Model):
+    securitization = models.ForeignKey(Securitization, on_delete=PROTECT)
+    investor = models.ForeignKey(Investor, on_delete=PROTECT)
+    investment_date = models.DateField()
+    maturity_date = models.DateField()
+    investment_amount = models.FloatField(validators=[MinValueValidator(0)])
+    interest_rate_type = models.PositiveSmallIntegerField( choices=((1,"Fixed"),(2,"AWPLR+")))
+    fixed_interest_rate = models.FloatField(validators=[MinValueValidator(0)],blank=True,null=True)
+    variable_rate_spread = models.FloatField(blank=True,null=True)
+    variable_rate_reset_freq = models.PositiveSmallIntegerField(blank=True,null=True)
+    variable_rate_floor = models.FloatField(blank=True,null=True)
+    variable_rate_cap = models.FloatField(blank=True,null=True)
+    funds_received = models.BooleanField(default=False)
+    maturity_proceeds_transfered = models.BooleanField(default=False)
+    withheld_tax = models.FloatField(default=0,blank=True)
+
+class Transfer(models.Model):
+    securitization = models.ForeignKey(Securitization, on_delete=PROTECT)
+    investor = models.ForeignKey(Investor, on_delete=PROTECT,null=True)
+    borrower = models.ForeignKey(Borrower, on_delete=PROTECT,null=True)
+    amount = models.FloatField()
+    transfer_date = models.DateField()
+    transfer_complete = models.BooleanField(default=False)
+
+

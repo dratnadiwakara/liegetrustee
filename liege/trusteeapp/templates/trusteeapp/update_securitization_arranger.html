@@ -1,40 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet"/>
+
+</head>
 {% load django_tables2 %}
-<h3>Update Securitization Arranger</h3>
-    <h4>Deal Name: {{temp_name}}</h4>
-    <h5>Borrower: {{borrower_name}}</h5>
-    <p>Trust Name: {{trust_name}}</p>
-    <p>Trust Account No: {{trust_bank_account_no}}</p>
-    <p>trust_bank_account_branch: {{trust_bank_account_branch}}</p>
-    <p>trust_bank_account_bank: {{trust_bank_account_bank}}</p>
-    <p>trustee_approved: {{trustee_approved}}</p>
-    <p>cashflow_checked: {{cashflow_checked}}</p>
+<body>
 
-    <!-- Update Form -->
-    <form method="POST"  enctype="multipart/form-data"> {% csrf_token %}
-        {{form.as_p}}
-        <input type="hidden" name="formtype" value="update"/>
-        <button type="submit" name="save" class="btn btn-success">Update Securitization</button>
-    </form>
 
-     
+    
+    <div class="container"><h1>Update Securitization Arranger </h1>
+        <h4>Deal Name: {{temp_name}}</h4>
+        <h5>Borrower: {{borrower_name}}</h5>
+        <p>Trust Name: {{trust_name}}</p>
+        <p>Trust Account No: {{trust_bank_account_no}}</p>
+        <p>trust_bank_account_branch: {{trust_bank_account_branch}}</p>
+        <p>trust_bank_account_bank: {{trust_bank_account_bank}}</p>
+        <p>trustee_approved: {{trustee_approved}}</p>
+        <p>cashflow_checked: {{cashflow_checked}}</p>
+    </div>
 
-    {% render_table investor_set %}
 
-    {% ifequal investor_count 0 %}
-    <!-- Add Investor Form: Only allow once. Check if there are already investors and display of not-->
-    <h3>Add Investors</h3>
-    <form method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-        <input type="hidden" name="formtype" value="addinvestors"/>
-        <input type="file" name="investor_file">
-        <input type="submit" value="Upload">
-    </form>
+    <div id="exTab1" class="container">	
+    <ul  class="nav nav-pills">
+                <li class="active">
+            <a  href="#1a" data-toggle="tab">Deal Info</a>
+                </li>
+                <li><a href="#2a" data-toggle="tab">Investors</a>
+                </li>
+                <li><a href="#3a" data-toggle="tab">Investments</a>
+                </li>
+              <li><a href="#4a" data-toggle="tab">Fund Transfers</a>
+                </li>
+            </ul>
+    
+                <div class="tab-content clearfix">
+ 
+                    <div class="tab-pane active" id="1a">
+                    <!-- Update Form -->
+                    <form method="POST"  enctype="multipart/form-data"> {% csrf_token %}
+                        {{form.as_p}}
+                        <input type="hidden" name="formtype" value="update"/>
+                        <button type="submit" name="save" class="btn btn-success">Update Securitization</button>
+                    </form>
+                    </div>
+ 
+                    <div class="tab-pane" id="2a">
+                        {% render_table investor_set %}
 
-    {% if investor_table_html %}
-    <form method="POST" enctype="multipart/form-data">{% csrf_token %}
-        <input type="hidden" name="formtype" value="confirm_investors">
-        <input type="submit" value="Confirm Investors">
-    </form>
-{{investor_table_html|safe}}
-    {% endif %}
-{% endifequal %}
+                        {% ifequal investor_count 0 %}
+                        <!-- Add Investor Form: Only allow once. Check if there are already investors and display of not-->
+                        <br/>
+                        <br/>
+                        <h3>Add Investors</h3>
+                        <br/>
+                        <br/>
+                        <form method="POST" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <input type="hidden" name="formtype" value="addinvestors"/>
+                            <input type="file" name="investor_file">
+                            <input type="submit" value="Upload">
+                        </form>
+                    
+                        {% if investor_table_html %}
+                            <form method="POST" enctype="multipart/form-data">{% csrf_token %}
+                                <input type="hidden" name="formtype" value="confirm_investors">
+                                <input type="submit" value="Confirm Investors">
+                            </form>
+                            {{investor_table_html|safe}}
+                        {% endif %}
+                    {% endifequal %}
+                    </div>
+                    
+                    <div class="tab-pane" id="3a">
+                        {% render_table investment_set %}
+                        <br/>
+                        <br/>
+                        <h3>Add Investments</h3>
+                        <br/>
+                        <br/>
+                        <form method="POST" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <input type="hidden" name="formtype" value="addinvestments"/>
+                            <input type="file" name="investments_file">
+                            <input type="submit" value="Upload">
+                        </form>
+
+                        {% if investments_table_html %}
+                            <form method="POST" enctype="multipart/form-data">{% csrf_token %}
+                                <input type="hidden" name="formtype" value="confirm_investments">
+                                <input type="submit" value="Confirm Investments">
+                            </form>
+                            {{investments_table_html|safe}}
+                        {% endif %}
+                    </div>
+              <div class="tab-pane" id="4a">
+              <h3>Fund Transfers</h3>
+              {% render_table transfer_set %}
+                    </div>
+                </div>
+      </div>
+    
+    
+      </div>
+    
+    
+    <!-- Bootstrap core JavaScript
+        ================================================== -->
+        <!-- Placed at the end of the document so the pages load faster -->
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+        <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+    </body>
