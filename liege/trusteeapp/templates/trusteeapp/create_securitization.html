@@ -1,0 +1,6 @@
+<h3>Create Securitization</h3>
+    
+    <form method="POST"  enctype="multipart/form-data"> {% csrf_token %}
+        {{form.as_p}}
+        <button type="submit",name="save" class="btn btn-success">Create Securitization</button>
+    </form>

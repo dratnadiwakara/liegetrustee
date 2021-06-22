@@ -1,0 +1,13 @@
+<h3>Update Securitization Trustee</h3>
+    <h4>Deal Name: {{temp_name}}</h4>
+    <h5>Borrower: {{borrower_name}}</h5>
+    <p>Amount Raising: {{amount_raised}}</p>
+    <p>Arranger Name: {{arranger_name}}</p>
+    <p>Expected Sign Date: {{expected_sign_date}}</p>
+    <p><b>Draft Trust Deed: </b><a target="_blank" href="http://127.0.0.1:8000/documents/{{td_firstdraft}}">View</a></p>
+    <p><b>Audit Report: </b>{% if audit_report %}<a target="_blank" href="http://127.0.0.1:8000/documents/{{audit_report}}">View</a>{% endif %}</p>
+    
+    <form method="POST"  enctype="multipart/form-data"> {% csrf_token %}
+        {{form.as_p}}
+        <button type="submit",name="save" class="btn btn-success">Update Securitization</button>
+    </form>

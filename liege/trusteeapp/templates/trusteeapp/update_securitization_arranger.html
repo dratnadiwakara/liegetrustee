@@ -1,0 +1,13 @@
+<h3>Update Securitization Arranger</h3>
+    <h4>Deal Name: {{temp_name}}</h4>
+    <h5>Borrower: {{borrower_name}}</h5>
+    <p>Trust Name: {{trust_name}}</p>
+    <p>Trust Account No: {{trust_bank_account_no}}</p>
+    <p>trust_bank_account_branch: {{trust_bank_account_branch}}</p>
+    <p>trust_bank_account_bank: {{trust_bank_account_bank}}</p>
+    <p>trustee_approved: {{trustee_approved}}</p>
+    <p>cashflow_checked: {{cashflow_checked}}</p>
+    <form method="POST"  enctype="multipart/form-data"> {% csrf_token %}
+        {{form.as_p}}
+        <button type="submit",name="save" class="btn btn-success">Update Securitization</button>
+    </form>
