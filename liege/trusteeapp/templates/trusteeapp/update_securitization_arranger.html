@@ -9,6 +9,7 @@
     <!--Chart js-->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.js" integrity="sha256-Uv9BNBucvCPipKQ2NS9wYpJmi8DTOEfTA/nH2aoJALw=" crossorigin="anonymous"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.8.0/Chart.min.css" integrity="sha256-aa0xaJgmK/X74WM224KMQeNQC2xYKwlAt08oZqjeF0E=" crossorigin="anonymous" />
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/1.10.25/css/dataTables.bootstrap4.min.css">
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
@@ -63,7 +64,8 @@ var myChart = new Chart(ctx, {
 
 
     
-    <div class="container"><h1>Update Securitization Arranger </h1>
+<div class="container"><h1>Update Securitization Arranger </h1>
+    <br/>
         <h4>Deal Name: {{temp_name}}</h4>
         <h5>Borrower: {{borrower_name}}</h5>
         <p>Trust Name: {{trust_name}}</p>
@@ -72,127 +74,127 @@ var myChart = new Chart(ctx, {
         <p>trust_bank_account_bank: {{trust_bank_account_bank}}</p>
         <p>trustee_approved: {{trustee_approved}}</p>
         <p>cashflow_checked: {{cashflow_checked}}</p>
-    </div>
-
-
-    <div id="exTab1" class="container">	
-    <ul  class="nav nav-pills">
-                <li class="active">
-            <a  href="#1a" data-toggle="tab">Deal Info</a>
-                </li>
-                <li><a href="#2a" data-toggle="tab">Investors</a>
-                </li>
-                <li><a href="#3a" data-toggle="tab">Investments</a>
-                </li>
-              <li><a href="#4a" data-toggle="tab">Fund Transfers</a>
-                </li>
-                <li><a href="#5a" data-toggle="tab">Securities</a>
-                </li>
-            </ul>
+</div>
+    <br/>
     
-                <div class="tab-content clearfix">
- 
-                    <div class="tab-pane active" id="1a">
-                    <!-- Update Form -->
+    <hr/>
+
+
+<div id="exTab1" class="container">	
+    <ul  class="nav nav-pills">
+        <li class="active"><a  href="#1a" data-toggle="tab">Deal Info</a></li>
+        <li><a href="#2a" data-toggle="tab">Investors</a></li>
+        <li><a href="#3a" data-toggle="tab">Investments</a></li>
+        <li><a href="#4a" data-toggle="tab">Fund Transfers</a></li>
+        <li><a href="#5a" data-toggle="tab">Securities</a></li>
+        <li><a href="#6a" data-toggle="tab">Messages</a></li>
+    </ul>
+    <div class="tab-content clearfix">
+        <div class="tab-pane active" id="1a">
+                    <br/><br/>
                     <form method="POST"  enctype="multipart/form-data"> {% csrf_token %}
                         {{form.as_p}}
                         <input type="hidden" name="formtype" value="update"/>
                         <button type="submit" name="save" class="btn btn-success">Update Securitization</button>
                     </form>
-                    </div>
- 
-                    <div class="tab-pane" id="2a">
-                        {% render_table investor_set %}
-
-                        {% ifequal investor_count 0 %}
-                        <!-- Add Investor Form: Only allow once. Check if there are already investors and display of not-->
-                        <br/>
-                        <br/>
-                        <h3>Add Investors</h3>
-                        <br/>
-                        <br/>
-                        <form method="POST" enctype="multipart/form-data">
-                            {% csrf_token %}
-                            <input type="hidden" name="formtype" value="addinvestors"/>
-                            <input type="file" name="investor_file">
-                            <input type="submit" value="Upload">
-                        </form>
-                    
-                        {% if investor_table_html %}
-                            <form method="POST" enctype="multipart/form-data">{% csrf_token %}
-                                <input type="hidden" name="formtype" value="confirm_investors">
-                                <input type="submit" value="Confirm Investors">
-                            </form>
-                            {{investor_table_html|safe}}
-                        {% endif %}
-                    {% endifequal %}
-                    </div>
-                    
-                    <div class="tab-pane" id="3a">
-                        {% render_table investment_set %}
-                        <br/>
-                        <br/>
-                        <h3>Add Investments</h3>
-                        <br/>
-                        <br/>
-                        <form method="POST" enctype="multipart/form-data">
-                            {% csrf_token %}
-                            <input type="hidden" name="formtype" value="addinvestments"/>
-                            <input type="file" name="investments_file">
-                            <input type="submit" value="Upload">
-                        </form>
-
-                        {% if investments_table_html %}
-                            <form method="POST" enctype="multipart/form-data">{% csrf_token %}
-                                <input type="hidden" name="formtype" value="confirm_investments">
-                                <input type="submit" value="Confirm Investments">
-                            </form>
-                            {{investments_table_html|safe}}
-                        {% endif %}
-                    </div>
-              <div class="tab-pane" id="4a">
-              <h3>Fund Transfers</h3>
-              {% render_table transfer_set %}
-
-                </div>
-
-                <div class="tab-pane" id="5a">
-                    <h3>Securities</h3>
-                    <canvas id="myChart" width="400" height="400"></canvas>
-                    <br/>
-                    <br/>
-                    {% render_table securities_set %}
-                    
-                    <h3>Add Securities</h3>
-                    <br/>
-                    <br/>
-                    <form method="POST" enctype="multipart/form-data">
-                        {% csrf_token %}
-                        <input type="hidden" name="formtype" value="addsecurities"/>
-                        <input type="file" name="securities_file">
-                        <input type="submit" value="Upload">
+        </div>
+        <div class="tab-pane" id="2a">
+            <br/><br/>
+                <table class="table table-striped table-bordered dataTable showtable" style="width: 100%;" >
+                    <thead><tr><th>Investor</th><th>Address</th><th>Email</th><th>Phone</th><th>Account Number</th><th>Bank/Branch</th></tr></thead>
+                    <tbody>
+                        {% for sec in investor_set %}<tr><td>{{sec.investor_name}}</td><td>{{sec.investor_address}}</td><td>{{sec.investor_email}}</td><td>{{sec.investor_phone}}</td><td>{{sec.investor_account_no}}</td><td>{{sec.investor_account_bank}}/{{sec.investor_account_branch}}</td></tr>{% endfor %}
+                    </tbody>
+                </table>
+                <!-- Add Investor Form: Only allow if signed =0-->
+                <br/><br/><h3>Add Investors</h3><br/><br/>
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <input type="hidden" name="formtype" value="addinvestors"/>
+                    <input type="file" name="investor_file">
+                    <input type="submit" value="Upload">
+                </form>
+                {% if investor_table_html %}
+                    <form method="POST" enctype="multipart/form-data">{% csrf_token %}
+                        <input type="hidden" name="formtype" value="confirm_investors">
+                        <input type="submit" value="Confirm Investors">
                     </form>
+                    {{investor_table_html|safe}}
+                {% endif %}
+        </div>
+        <div class="tab-pane" id="3a">
+            <table class="table table-striped table-bordered dataTable showtable" style="width: 100%;" >
+                <thead><tr><th>Investor</th><th>Investment Date</th><th>Maturity Date</th><th>Investment Amount</th><th>Interest Rate Type</th><th>Fixed Rate</th><th>Variable Rate Spread</th><th>Reset Freq.</th><th>Floor</th><th>Cap</th><th>Funds Received</th><th>Maturity Proceeds Transfered</th></tr></thead>
+                <tbody>
+                    {% for sec in investment_set %}<tr><td>{{sec.investor.investor_name}}</td><td>{{sec.investment_date}}</td><td>{{sec.maturity_date}}</td><td>{{sec.investment_amount}}</td><td>{{sec.interest_rate_type}}</td><td>{{sec.fixed_interest_rate}}</td><td>{{sec.variable_rate_spread}}</td><td>{{sec.variable_rate_reset_freq}}</td><td>{{sec.variable_rate_floor}}</td><td>{{sec.variable_rate_cap}}</td><td>{{sec.funds_received}}</td><td>{{sec.maturity_proceeds_transfered}}</td></tr>{% endfor %}
+                </tbody>
+            </table>
+            <br/><br/><h3>Add Investments</h3><br/><br/>
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="formtype" value="addinvestments"/>
+                <input type="file" name="investments_file">
+                <input type="submit" value="Upload">
+            </form>
 
-                    {% if securities_table_html %}
-                            <form method="POST" enctype="multipart/form-data">{% csrf_token %}
-                                <input type="hidden" name="formtype" value="confirm_securities">
-                                <input type="submit" value="Confirm Securities">
-                            </form>
-                            {{securities_table_html|safe}}
-                        {% endif %}
+            {% if investments_table_html %}
+                <form method="POST" enctype="multipart/form-data">{% csrf_token %}
+                    <input type="hidden" name="formtype" value="confirm_investments">
+                    <input type="submit" value="Confirm Investments">
+                </form>
+                {{investments_table_html|safe}}
+            {% endif %}
+        </div>
+        <div class="tab-pane" id="4a">
+            <br/><br/>
+            <table class="table table-striped table-bordered dataTable showtable" style="width: 100%;" >
+            <thead><tr><th>Transfer ID</th><th>Investor</th><th>Borrower</th><th>Amount</th><th>Transfer Date</th><th>Transfer Complete</th></tr></thead>
+            <tbody>
+                {% for sec in transfer_set %}<tr><td>{{sec.id}}</td><td>{{sec.investor.investor_name}}</td><td>{{sec.borrower.borrower_name}}</td><td>{{sec.amount}}</td><td>{{sec.transfer_date}}</td><td>{{sec.transfer_complete}}</td></tr>{% endfor %}
+            </tbody>
+            </table>
+        </div>
+        <div class="tab-pane" id="5a">
+            <br/><br/><canvas id="myChart" width="400" height="400"></canvas><br/><br/>
+            <hr/>
+            <table class="table table-striped table-bordered dataTable showtable" style="width: 100%;" >
+                <thead><tr><th>Added Date</th><th>Engine Number</th><th>Chassis Number</th><th>Montly Payment</th><th>Vehicle Number</th><th>Last Payment Date</th></tr></thead>
+                <tbody>
+                    {% for sec in securities_set %}<tr><td>{{sec.added_date}}</td><td>{{sec.engine_number}}</td><td>{{sec.chassis_number}}</td><td>{{sec.monthly_payment}}</td><td>{{sec.vehicle_number}}</td><td>{{sec.last_payment_date}}</td></tr>{% endfor %}
+                </tbody>
+            </table>
+            <h3>Add Securities</h3>
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <input type="hidden" name="formtype" value="addsecurities"/>
+                <input type="file" name="securities_file">
+                <input type="submit" value="Upload">
+            </form>
+            {% if securities_table_html %}
+                    <form method="POST" enctype="multipart/form-data">{% csrf_token %}
+                        <input type="hidden" name="formtype" value="confirm_securities">
+                        <input type="submit" value="Confirm Securities">
+                    </form>
+                    {{securities_table_html|safe}}
+            {% endif %}
+        </div>
+        <div class="tab-pane" id="6a">
+            Table showing messages and ability to send a message to the trustee
+        </div>
 
-                </div>
-
-            </div>
-      </div>
+    </div>
+  </div>
+</div>
     
     
-      </div>
+<!-- Bootstrap core JavaScript
+================================================== -->
+<!-- Placed at the end of the document so the pages load faster -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js"></script>
+<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/1.10.25/js/jquery.dataTables.min.js"></script>
+<script type="text/javascript" language="javascript" src="https://cdn.datatables.net/1.10.25/js/dataTables.bootstrap4.min.js"></script>
+<script>$('.showtable').DataTable();</script>
     
-    
-    <!-- Bootstrap core JavaScript
-        ================================================== -->
-        <!-- Placed at the end of the document so the pages load faster -->
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-        <script src="//maxcdn.bootstrapcdn.com/bootstrap/3.2.0/js/bootstrap.min.js"></script>
-    </body>
+</body>

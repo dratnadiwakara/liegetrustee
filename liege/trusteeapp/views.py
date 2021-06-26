@@ -16,20 +16,6 @@ def index(response):
     return HttpResponse("test")
 
 
-class InvestorTable(tables.Table):
-    class Meta:
-        model = Investor 
-        exclude=('id','securitization')
-
-class InvestmentTable(tables.Table):
-    class Meta:
-        model = Investment 
-        exclude=('id','securitization')
-
-class TransferTable(tables.Table):
-    class Meta:
-        model = Transfer 
-        exclude=('id','securitization')
 
 def create_borrower_view(request):
     form = borrower_form(request.POST or None)
@@ -135,10 +121,10 @@ def update_securitization_arranger_view(request,id):
                 "trust_bank_account_bank":sec.trust_bank_account_bank,
                 "cashflow_checked":sec.cashflow_checked,
                 "trustee_approved":sec.trustee_approved,
-                "investor_set":InvestorTable(sec.investor_set.all()),
-                "investment_set":InvestmentTable(sec.investment_set.all()),
-                "investor_count":sec.investor_set.all().count(),
-                "investment_count":sec.investment_set.all().count(),
+                "investor_set":sec.investor_set.all(),
+                "investment_set":sec.investment_set.all(),
+                #"investor_count":sec.investor_set.all().count(),
+                #"investment_count":sec.investment_set.all().count(),
                 "transfer_set":sec.transfer_set.all().order_by('transfer_date'),
                 "securities_set":secset,
                 "payment_dates": tf['cf_date'].to_list(),
@@ -182,8 +168,6 @@ def update_securitization_arranger_view(request,id):
             sec.save()
             print(sec.investments_file.name)
             investments_table = pd.read_csv(sec.investments_file)
-            #### Convert this to a django-table2
-            #investor_table_html = InvestorTable(investor_table.to_dict(orient='list'))
             investments_table_html = investments_table.to_html()
             context["investments_table_html"] = investments_table_html
         
