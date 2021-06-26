@@ -1,4 +1,4 @@
-from .models import Investor,Investment,Transfer
+from .models import *
 from django.shortcuts import redirect, render
 from django.http import HttpResponse
 from .forms import *
@@ -7,6 +7,9 @@ import pandas as pd
 import django_tables2 as tables
 import os
 import datetime
+from django.http import JsonResponse
+import json
+
 # Create your views here.
 
 def index(response):
@@ -97,6 +100,33 @@ def update_securitization_arranger_view(request,id):
             sec.save()
             return redirect("/update_securitization_arranger/"+str(id)+"/")
     
+    secset = sec.security_set.all()
+    secdf = pd.DataFrame(list(secset.values()))
+    t = pd.date_range(start=datetime.date.today(),end=max(secdf['last_payment_date']),freq="MS")
+    cf = pd.DataFrame(0,index=t,columns=['cashflow'])
+    for index, row in secdf.iterrows():
+       stdate = datetime.date.today()
+       while stdate < row['last_payment_date']:
+           stdate = datetime.date(stdate.year + int(stdate.month / 12), ((stdate.month % 12) + 1), 1)
+           cf.loc[stdate.strftime("%Y-%m-%d"),'cashflow'] = cf.loc[stdate.strftime("%Y-%m-%d"),'cashflow']+row['monthly_payment']
+    
+    tf = pd.DataFrame(list(sec.borrower.transfer_set.all().filter(amount__gte=0).values()))
+    tf = tf[['amount','transfer_date']]
+    tf['transfer_date'] = tf['transfer_date'].apply(lambda datetime: datetime.replace(day=1))
+    tf.set_index('transfer_date',inplace=True)
+    tf = cf.join(tf,how="outer")
+    tf['amountcc']=tf.amount*1.3
+    tf['cf_date'] = tf.index.strftime("%y-%m")
+    jf = tf.to_json(orient='records')
+    """
+    fig = Figure()
+    ax = fig.add_subplot(1,1,1)
+    ax.plot(tf.cashflow,label="line1")
+    ax.plot(tf.amountcc,label="line2") 
+    ax.plot(tf.amount,label="line3")
+    ax.legend()
+    graph_div = plt.offline.plot(fig, auto_open = False, output_type="div")"""
+
     context = {"form":form,"temp_name":sec.temp_name,
                 "borrower_name":sec.borrower.borrower_name,
                 "trust_name":sec.trust_name,
@@ -109,7 +139,13 @@ def update_securitization_arranger_view(request,id):
                 "investment_set":InvestmentTable(sec.investment_set.all()),
                 "investor_count":sec.investor_set.all().count(),
                 "investment_count":sec.investment_set.all().count(),
-                "transfer_set":sec.transfer_set.all().order_by('transfer_date')}
+                "transfer_set":sec.transfer_set.all().order_by('transfer_date'),
+                "securities_set":secset,
+                "payment_dates": tf['cf_date'].to_list(),
+                "amount": tf['amount'].to_list(),
+                "amountcc": tf['amountcc'].to_list(),
+                "cashflow": tf['cashflow'].to_list()}
+                
 
     #print(sec.investor_set.all().count())
 
@@ -212,4 +248,35 @@ def update_securitization_arranger_view(request,id):
                                 )
                         
             inv.save()
+
+    if request.method=="POST" and request.POST['formtype']=="addsecurities":
+        if request.FILES.get('securities_file', False)!=False:
+            #### Validate if the file is correct format
+            sec.security_list_file =request.FILES['securities_file']
+            sec.security_list_file.name = "securities_file_"+str(sec.id)+"."+str(sec.investor_schedule_file).split(".")[1].lower()    
+            sec.save()
+
+            securities_table = pd.read_csv(sec.security_list_file)
+            #### Convert this to a django-table2
+            #investor_table_html = InvestorTable(investor_table.to_dict(orient='list'))
+            securities_table_html = securities_table.to_html()
+            context["securities_table_html"] = securities_table_html
+
+    if request.method=="POST" and request.POST['formtype']=="confirm_securities":
+        securities_table = pd.read_csv(sec.security_list_file)
+        securities_table = securities_table.rename(columns={'last_payment_date_year':'year','last_payment_date_month':'month','last_payment_date_date':'day'})
+        securities_table['last_payment_date'] = pd.to_datetime(securities_table[['year','month','day']])
+  
+        for index, row in securities_table.iterrows():
+            #### add other variables as attributes
+            scr = Security(securitization=sec,
+                            added_date = datetime.date.today(),
+                            engine_number = row['engine_number'],
+                            chassis_number = row['chassis_number'],
+                            monthly_payment = row['monthly_payment'],
+                            last_payment_date = row['last_payment_date'],
+
+            )
+            scr.save()
+
     return render(request,"trusteeapp/update_securitization_arranger.html",context)

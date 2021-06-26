@@ -40,6 +40,7 @@ class Securitization(models.Model):
     audit_report = models.FileField(blank=True) 
     investor_schedule_file = models.FileField(blank=True) 
     investments_file = models.FileField(blank=True) 
+    security_list_file = models.FileField(blank=True) 
     trust_certificates = models.FileField(blank=True) 
 
 
@@ -88,4 +89,21 @@ class Transfer(models.Model):
     transfer_date = models.DateField()
     transfer_complete = models.BooleanField(default=False)
 
+class Security(models.Model):
+    securitization = models.ForeignKey(Securitization, on_delete=PROTECT)
+    added_date = models.DateField()
+    removed_date = models.DateField(blank=True,null=True)
+    vehicle_number = models.CharField(max_length=30,blank=True,null=True)
+    engine_number = models.CharField(max_length=30)
+    chassis_number = models.CharField(max_length=30)
+    make = models.CharField(max_length=30,blank=True,null=True)
+    model = models.CharField(max_length=30,blank=True,null=True)
+    lessee_name = models.CharField(max_length=200,blank=True,null=True)
+    lessee_nic = models.CharField(max_length=15,blank=True,null=True)
+    lessee_address = models.CharField(max_length=200,blank=True,null=True)
+    loan_amount = models.FloatField(blank=True,null=True)
+    interest_rate = models.FloatField(blank=True,null=True)
+    monthly_payment = models.FloatField()
+    last_payment_date = models.DateField()
+    days_in_arrears = models.PositiveIntegerField(blank=True,null=True)
 
