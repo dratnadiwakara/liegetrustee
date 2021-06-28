@@ -16,7 +16,7 @@ def index(response):
     return HttpResponse("test")
 
 
-
+# trustee
 def create_borrower_view(request):
     form = borrower_form(request.POST or None)
 
@@ -37,28 +37,60 @@ def create_securitization_view(request):
     return render(request,"trusteeapp/create_securitization.html",{"form":form})
 
 # trustee
+def view_securitizations(request):
+    current = Securitization.objects.filter(trustee_approved=False)
+    past = Securitization.objects.filter(trustee_approved=True)
+    context = {"currentdeals":current,"pastdeals":past}
+    return render(request,"trusteeapp/view_securitizations.html",context)
+
+
+# trustee
+def view_transfers(request):
+    current = Transfer.objects.filter(transfer_complete=False)
+    past = Transfer.objects.filter(transfer_complete=True)
+    context = {"pending":current,"pasttrans":past}
+    return render(request,"trusteeapp/view_transfers.html",context)
+
+# trustee
 def update_securitization_trustee_view(request,id):
     sec = Securitization.objects.get(id=id)
     form = update_securitization_trustee_form(instance=sec)
+
+    context = {"form":form,
+                "securitization":sec,}
+
+    if sec.security_set.all().count() > 0:
+        secset = sec.security_set.all()
+        secdf = pd.DataFrame(list(secset.values()))
+        t = pd.date_range(start=datetime.date.today(),end=max(secdf['last_payment_date']),freq="MS")
+        cf = pd.DataFrame(0,index=t,columns=['cashflow'])
+        for index, row in secdf.iterrows():
+            stdate = datetime.date.today()
+            while stdate < row['last_payment_date']:
+                stdate = datetime.date(stdate.year + int(stdate.month / 12), ((stdate.month % 12) + 1), 1)
+                cf.loc[stdate.strftime("%Y-%m-%d"),'cashflow'] = cf.loc[stdate.strftime("%Y-%m-%d"),'cashflow']+row['monthly_payment']
+            
+        tf = pd.DataFrame(list(sec.borrower.transfer_set.all().filter(amount__gte=0).values()))
+        tf = tf[['amount','transfer_date']]
+        tf['transfer_date'] = tf['transfer_date'].apply(lambda datetime: datetime.replace(day=1))
+        tf.set_index('transfer_date',inplace=True)
+        tf = cf.join(tf,how="outer")
+        tf['amountcc']=tf.amount*1.3
+        tf['cf_date'] = tf.index.strftime("%y-%m")
+        context["payment_dates"] = tf['cf_date'].to_list()
+        context["amount"] = tf['amount'].to_list()
+        context["amountcc"] = tf['amountcc'].to_list()
+        context["cashflow"] = tf['cashflow'].to_list()
+
 
     if request.method=="POST" and request.POST['formtype']=="update":
         form = update_securitization_trustee_form(request.POST,instance=sec)
         
         if form.is_valid():
             form.save()
-            return redirect("/update_securitization_trustee/"+str(id)+"/")
-    
-    context = {"form":form,"temp_name":sec.temp_name,
-                "borrower_name":sec.borrower.borrower_name,
-                "td_firstdraft":sec.td_firstdraft.name,
-                "audit_report":sec.audit_report.name,
-                "amount_raised":sec.amount_raised,
-                "arranger_name":sec.arranger_name,
-                "expected_sign_date":sec.expected_sign_date}
     return render(request,"trusteeapp/update_securitization_trustee.html",context)
 
-
-# trustee
+# arranger
 def update_securitization_arranger_view(request,id):
     sec = Securitization.objects.get(id=id)
     form = update_securitization_arranger_form(instance=sec)
@@ -85,52 +117,33 @@ def update_securitization_arranger_view(request,id):
                 sec.td_completesigned.name = "td_completesigned_"+str(sec.id)+"."+str(sec.td_completesigned).split(".")[1].lower()    
             sec.save()
             return redirect("/update_securitization_arranger/"+str(id)+"/")
-    
-    secset = sec.security_set.all()
-    secdf = pd.DataFrame(list(secset.values()))
-    t = pd.date_range(start=datetime.date.today(),end=max(secdf['last_payment_date']),freq="MS")
-    cf = pd.DataFrame(0,index=t,columns=['cashflow'])
-    for index, row in secdf.iterrows():
-       stdate = datetime.date.today()
-       while stdate < row['last_payment_date']:
-           stdate = datetime.date(stdate.year + int(stdate.month / 12), ((stdate.month % 12) + 1), 1)
-           cf.loc[stdate.strftime("%Y-%m-%d"),'cashflow'] = cf.loc[stdate.strftime("%Y-%m-%d"),'cashflow']+row['monthly_payment']
-    
-    tf = pd.DataFrame(list(sec.borrower.transfer_set.all().filter(amount__gte=0).values()))
-    tf = tf[['amount','transfer_date']]
-    tf['transfer_date'] = tf['transfer_date'].apply(lambda datetime: datetime.replace(day=1))
-    tf.set_index('transfer_date',inplace=True)
-    tf = cf.join(tf,how="outer")
-    tf['amountcc']=tf.amount*1.3
-    tf['cf_date'] = tf.index.strftime("%y-%m")
-    jf = tf.to_json(orient='records')
-    """
-    fig = Figure()
-    ax = fig.add_subplot(1,1,1)
-    ax.plot(tf.cashflow,label="line1")
-    ax.plot(tf.amountcc,label="line2") 
-    ax.plot(tf.amount,label="line3")
-    ax.legend()
-    graph_div = plt.offline.plot(fig, auto_open = False, output_type="div")"""
 
-    context = {"form":form,"temp_name":sec.temp_name,
-                "borrower_name":sec.borrower.borrower_name,
-                "trust_name":sec.trust_name,
-                "trust_bank_account_no":sec.trust_bank_account_no,
-                "trust_bank_account_branch":sec.trust_bank_account_branch,
-                "trust_bank_account_bank":sec.trust_bank_account_bank,
-                "cashflow_checked":sec.cashflow_checked,
-                "trustee_approved":sec.trustee_approved,
-                "investor_set":sec.investor_set.all(),
-                "investment_set":sec.investment_set.all(),
-                #"investor_count":sec.investor_set.all().count(),
-                #"investment_count":sec.investment_set.all().count(),
-                "transfer_set":sec.transfer_set.all().order_by('transfer_date'),
-                "securities_set":secset,
-                "payment_dates": tf['cf_date'].to_list(),
-                "amount": tf['amount'].to_list(),
-                "amountcc": tf['amountcc'].to_list(),
-                "cashflow": tf['cashflow'].to_list()}
+    context = {"form":form,
+                "securitization":sec,}
+
+    if sec.security_set.all().count() > 0:
+        secset = sec.security_set.all()
+        secdf = pd.DataFrame(list(secset.values()))
+        t = pd.date_range(start=datetime.date.today(),end=max(secdf['last_payment_date']),freq="MS")
+        cf = pd.DataFrame(0,index=t,columns=['cashflow'])
+        for index, row in secdf.iterrows():
+            stdate = datetime.date.today()
+            while stdate < row['last_payment_date']:
+                stdate = datetime.date(stdate.year + int(stdate.month / 12), ((stdate.month % 12) + 1), 1)
+                cf.loc[stdate.strftime("%Y-%m-%d"),'cashflow'] = cf.loc[stdate.strftime("%Y-%m-%d"),'cashflow']+row['monthly_payment']
+            
+        tf = pd.DataFrame(list(sec.borrower.transfer_set.all().filter(amount__gte=0).values()))
+        tf = tf[['amount','transfer_date']]
+        tf['transfer_date'] = tf['transfer_date'].apply(lambda datetime: datetime.replace(day=1))
+        tf.set_index('transfer_date',inplace=True)
+        tf = cf.join(tf,how="outer")
+        tf['amountcc']=tf.amount*1.3
+        tf['cf_date'] = tf.index.strftime("%y-%m")
+        context["payment_dates"] = tf['cf_date'].to_list()
+        context["amount"] = tf['amount'].to_list()
+        context["amountcc"] = tf['amountcc'].to_list()
+        context["cashflow"] = tf['cashflow'].to_list()
+
                 
 
     #print(sec.investor_set.all().count())

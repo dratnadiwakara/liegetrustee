@@ -1,0 +1,38 @@
+{% extends "trusteeapp/base_trustee.html" %}
+
+{% block title %}
+Create Borrower
+{% endblock title %}
+
+{% load crispy_forms_tags %} 
+{% block content %}
+<div id="exTab1" class="container">	
+    <ul  class="nav nav-pills">
+        <li class="active"><a href="#1a" data-toggle="tab">Pending Transfers</a></li>
+        <li><a href="#2a" data-toggle="tab">Completed Transfers</a></li>
+
+    </ul>
+    <div class="tab-content clearfix">
+        <div class="tab-pane active" id="1a">
+            {% if pending %}
+            <table class="table table-striped table-bordered dataTable showtable" style="width: 100%;" >
+                <thead><tr><th>Securitization</th><th>Investor Name</th><th>Borrower Name</th><th>Amount</th><th>Transfer Date</th><th>Completed</th></tr></thead>
+                <tbody>
+                    {% for sec in pending %}<tr><td><a href="update_securitization_trustee/{{sec.securitization.id}}">{{sec.securitization.trust_name}} ({{sec.securitization.temp_name}}}</a></td><td>{{sec.investor.investor_name}}</td><td>{{sec.borrower.borrower_name}}</td><td>{{sec.amount}}</td><td>{{sec.transfer_date}}</td><td><input type="checkbox"/> {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+            Add form to upload bank statement to mark transactions as complete
+        </div>
+        <div class="tab-pane active" id="2a">
+            {% if past %}
+            <table class="table table-striped table-bordered dataTable showtable" style="width: 100%;" >
+                <thead><tr><th>Securitization</th><th>Investor Name</th><th>Borrower Name</th><th>Amount</th><th>Transfer Date</th></tr></thead>
+                <tbody>
+                    {% for sec in past %}<tr><td><a href="update_securitization_trustee/{{sec.securitization.id}}">{{sec.securitization.trust_name}} ({{sec.securitization.temp_name}}}</a></td><td>{{sec.investor.investor_name}}</td><td>{{sec.borrower.borrower_name}}</td><td>{{sec.amount}}</td><td>{{sec.transfer_date}}</td></tr>{% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+        </div>
+    </div>
+{% endblock content %}

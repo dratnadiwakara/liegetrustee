@@ -1,14 +1,167 @@
-<h3>Update Securitization Trustee</h3>
-    <h4>Deal Name: {{temp_name}}</h4>
-    <h5>Borrower: {{borrower_name}}</h5>
-    <p>Amount Raising: {{amount_raised}}</p>
-    <p>Arranger Name: {{arranger_name}}</p>
-    <p>Expected Sign Date: {{expected_sign_date}}</p>
-    <p><b>Draft Trust Deed: </b><a target="_blank" href="http://127.0.0.1:8000/documents/{{td_firstdraft}}">View</a></p>
-    <p><b>Audit Report: </b>{% if audit_report %}<a target="_blank" href="http://127.0.0.1:8000/documents/{{audit_report}}">View</a>{% endif %}</p>
+{% extends "trusteeapp/base_trustee.html" %}
+
+{% block title %}
+View Securitization
+{% endblock title %}
+
+{% block chartjs %}
+    $(document).ready(function(){
+        var ctx = document.getElementById('myChart');
+        ctx.height = 100;
+    var myChart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+        labels: [ {% for i in payment_dates %}'{{i}}',{% endfor %}],
+        datasets: [{
+            label: 'Repayment amount',
+            data: [ {% for i in amount %}'{{i}}',{% endfor %}],
+            borderWidth: 2,
+            borderColor: 'rgba(211, 77, 67, 1)',
+            backgroundColor:'rgba(213, 101, 92, 1)'
+        },
+        {
+            label: 'Repayment amount*1.3',
+            data: [{% for i in amountcc %}'{{i}}',{% endfor %}],
+            borderWidth: 2,
+            borderColor: 'rgba(211, 54, 81 , 1)',
+            backgroundColor:'rgba(211, 67, 92, 1)'
+        },
+        {
+            label: 'Cash flow from receivables',
+            data: [{% for i in cashflow %}'{{i}}',{% endfor %}],
+            borderWidth: 2,
+            borderColor: 'rgba(30, 94, 9, 1)',
+            backgroundColor:'rgba(46, 98, 29, 1)'
+        }]
+    },
+    options: {
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+    });
+    });
+{% endblock chartjs %}
+
+{% block content %}
+    <div class="container"><h1>{% if securitization.trust_name %}{{securitization.trust_name}}{% else %}{{securitization.temp_name}}{% endif %}</h1>
+        <br/>
+        <div class="col-sm-4">
+        <div class="card">
+            <div class="card-body">
+              <p class="card-text">
+                <h4>Borrower: {{securitization.borrower.borrower_name}}</h4>
+                <h4>Amount Raising: {{securitization.amount_raised}}</h4>
+                <h4>Arranger Name: {{securitization.arranger_name}}</h4>    
+            </p>
+            </div>
+        </div>
+        </div>
+        <div class="col-sm-4">
+        <div class="card">
+            <div class="card-body">
+              <p class="card-text">
+                <h4>Expected Sign Date: {{securitization.expected_sign_date}}</h4>
+    <h4>Information Memo: <a target="_blank" href="http://127.0.0.1:8000/documents/{{securitization.board_resolution}}">View</a></h4>
+    <h4>Board Resolution: {% if securitization.board_resolution %}<a target="_blank" href="http://127.0.0.1:8000/documents/{{securitization.board_resolution}}">View</a>{% endif %}</h4>
+              </p>
+            </div>
+        </div>
+        </div>
+        <div class="col-sm-4">
+            <div class="card">
+                <div class="card-body">
+                  <p class="card-text">
+                     <h4>Audit Report: {% if securitization.audit_report %}<a target="_blank" href="http://127.0.0.1:8000/documents/{{securitization.audit_report}}">View</a>{% endif %}</h4>
+                     <h4>Trust Deed (draft): {% if securitization.td_firstdraft %}<a target="_blank" href="http://127.0.0.1:8000/documents/{{securitization.td_firstdraft}}">View</a>{% endif %}</h4>
+                     <h4>Trust Deed (final): {% if securitization.td_completesigned %}<a target="_blank" href="http://127.0.0.1:8000/documents/{{securitization.td_completesigned}}">View</a>{% endif %}</h4>
+                  </p>
+                </div>
+            </div>
+            </div>
+            
+            
     
-    <form method="POST"  enctype="multipart/form-data"> {% csrf_token %}
-        {{form.as_p}}
-        <input type="hidden" name="formtype" value="update"/>
-        <button type="submit",name="save" class="btn btn-success">Update Securitization</button>
-    </form>
+    </div>
+        <br/>
+        
+        <hr/>
+    
+    
+    <div id="exTab1" class="container">	
+        <ul  class="nav nav-pills">
+            <li class="active"><a  href="#1a" data-toggle="tab">Deal Info</a></li>
+            <li><a href="#2a" data-toggle="tab">Investors</a></li>
+            <li><a href="#3a" data-toggle="tab">Investments</a></li>
+            <li><a href="#4a" data-toggle="tab">Fund Transfers</a></li>
+            <li><a href="#5a" data-toggle="tab">Securities</a></li>
+            <li><a href="#6a" data-toggle="tab">Messages</a></li>
+            <li><a href="#7a" data-toggle="tab">Trust Certificates</a></li>
+        </ul>
+        <div class="tab-content clearfix">
+            <div class="tab-pane active" id="1a">
+                        <br/><br/>
+                        <form method="POST"  enctype="multipart/form-data"> {% csrf_token %}
+                            {{form.as_p}}
+                            <input type="hidden" name="formtype" value="update"/>
+                            <button type="submit",name="save" class="btn btn-success">Update Securitization</button>
+                        </form>
+            </div>
+            <div class="tab-pane" id="2a">
+                {% if securitization.investor_set.exists  %}
+                <br/><br/>
+                <table class="table table-striped table-bordered dataTable showtable" style="width: 100%;" >
+                    <thead><tr><th>Investor</th><th>Address</th><th>Email</th><th>Phone</th><th>Account Number</th><th>Bank/Branch</th></tr></thead>
+                    <tbody>
+                        {% for sec in securitization.investor_set.all %}<tr><td>{{sec.investor_name}}</td><td>{{sec.investor_address}}</td><td>{{sec.investor_email}}</td><td>{{sec.investor_phone}}</td><td>{{sec.investor_account_no}}</td><td>{{sec.investor_account_bank}}/{{sec.investor_account_branch}}</td></tr>{% endfor %}
+                    </tbody>
+                </table>
+                {% endif %}
+            </div>
+            <div class="tab-pane" id="3a">
+                {% if securitization.investment_set.exists  %}
+                <br/><br/>
+                <table class="table table-striped table-bordered dataTable showtable" style="width: 100%;" >
+                    <thead><tr><th>Investor</th><th>Investment Date</th><th>Maturity Date</th><th>Investment Amount</th><th>Interest Rate Type</th><th>Fixed Rate</th><th>Variable Rate Spread</th><th>Reset Freq.</th><th>Floor</th><th>Cap</th><th>Funds Received</th><th>Maturity Proceeds Transfered</th></tr></thead>
+                    <tbody>
+                        {% for sec in securitization.investment_set.all %}<tr><td>{{sec.investor.investor_name}}</td><td>{{sec.investment_date}}</td><td>{{sec.maturity_date}}</td><td>{{sec.investment_amount}}</td><td>{{sec.interest_rate_type}}</td><td>{{sec.fixed_interest_rate}}</td><td>{{sec.variable_rate_spread}}</td><td>{{sec.variable_rate_reset_freq}}</td><td>{{sec.variable_rate_floor}}</td><td>{{sec.variable_rate_cap}}</td><td>{{sec.funds_received}} {% if not sec.funds_received %}<a href="#">Set Received </a>{% endif %}</td><td>{{sec.maturity_proceeds_transfered}} {% if not sec.maturity_proceeds_transfered %}<a href="#">Set Transfered </a> {% endif %}</td></tr>{% endfor %}
+                    </tbody>
+                </table>
+                {% endif %}
+            </div>
+            <div class="tab-pane" id="4a">
+                {% if securitization.transfer_set.exists  %}
+                <br/><br/>
+                <table class="table table-striped table-bordered dataTable showtable" style="width: 100%;" >
+                <thead><tr><th>Transfer ID</th><th>Investor</th><th>Borrower</th><th>Amount</th><th>Transfer Date</th><th>Transfer Complete</th></tr></thead>
+                <tbody>
+                    {% for sec in securitization.transfer_set.all %}<tr><td>{{sec.id}}</td><td>{{sec.investor.investor_name}}</td><td>{{sec.borrower.borrower_name}}</td><td>{{sec.amount}}</td><td>{{sec.transfer_date}}</td><td>{{sec.transfer_complete}} {% if not sec.transfer_complete %}<a href="#">Set Complete </a>{% endif %}</td></tr>{% endfor %}
+                </tbody>
+                </table>
+                {% endif %}
+            </div>
+            <div class="tab-pane" id="5a">
+                {% if securitization.security_set.exists  %}
+                <br/><br/><canvas id="myChart" width="400" height="400"></canvas><br/><br/>
+                <hr/>
+                <table class="table table-striped table-bordered dataTable showtable" style="width: 100%;" >
+                    <thead><tr><th>Added Date</th><th>Engine Number</th><th>Chassis Number</th><th>Montly Payment</th><th>Vehicle Number</th><th>Last Payment Date</th></tr></thead>
+                    <tbody>
+                        {% for sec in securitization.security_set.all %}<tr><td>{{sec.added_date}}</td><td>{{sec.engine_number}}</td><td>{{sec.chassis_number}}</td><td>{{sec.monthly_payment}}</td><td>{{sec.vehicle_number}}</td><td>{{sec.last_payment_date}}</td></tr>{% endfor %}
+                    </tbody>
+                </table>
+                {% endif %}
+            </div>
+            <div class="tab-pane" id="6a">
+                Table showing messages and ability to send a message to the trustee
+            </div>
+            <div class="tab-pane" id="7a">
+                Download all trust certificates
+            </div>
+    
+        </div>
+      </div>
+    </div>
+{% endblock content %}
