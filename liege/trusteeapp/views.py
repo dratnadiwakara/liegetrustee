@@ -43,6 +43,17 @@ def view_securitizations(request):
     context = {"currentdeals":current,"pastdeals":past}
     return render(request,"trusteeapp/view_securitizations.html",context)
 
+# arranger
+def view_securitizations_current_arranger(request):
+    current = Securitization.objects.filter(trustee_approved=False)
+    context = {"currentdeals":current}
+    return render(request,"trusteeapp/view_securitizations_current_arranger.html",context)
+
+# arranger
+def view_securitizations_past_arranger(request):
+    past = Securitization.objects.filter(trustee_approved=True)
+    context = {"pastdeals":past}
+    return render(request,"trusteeapp/view_securitizations_past_arranger.html",context)
 
 # trustee
 def view_transfers(request):

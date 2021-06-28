@@ -11,5 +11,7 @@ urlpatterns = [
     path("update_securitization_trustee/<int:id>/",views.update_securitization_trustee_view),
     path("update_securitization_arranger/<int:id>/",views.update_securitization_arranger_view),
     path("view_securitizations",views.view_securitizations),
+    path("view_securitizations_current_arranger",views.view_securitizations_current_arranger),
+    path("view_securitizations_past_arranger",views.view_securitizations_past_arranger),
     path("view_transfers",views.view_transfers),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

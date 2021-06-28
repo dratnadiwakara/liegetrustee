@@ -1,0 +1,23 @@
+
+{% extends "trusteeapp/base_arranger.html" %}
+{% block title %}
+Create New Securitization
+{% endblock title %}
+
+
+
+{% load crispy_forms_tags %} 
+{% block content %}
+
+<br/>
+<br/>
+{% if pastdeals %}
+<table class="table table-striped table-bordered dataTable showtable" style="width: 100%;" >
+    <thead><tr><th>Name</th><th>Trust Name</th><th>Borrower</th><th>Amount</th><th>Expected Signing Date</th></tr></thead>
+    <tbody>
+        {% for sec in pastdeals %}<tr><td><a href="update_securitization_arranger/{{sec.id}}">{{sec.temp_name}}</a></td><td>{{sec.trust_name}}</td><td>{{sec.borrower.borrower_name}}</td><td>{{sec.amount_raised}}</td><td>{{sec.expected_sign_date}}</td></tr>{% endfor %}
+    </tbody>
+</table>
+{% endif %}
+
+{% endblock content %}

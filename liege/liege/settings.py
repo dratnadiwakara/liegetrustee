@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'trusteeapp.apps.TrusteeappConfig',
+    'custodian',
     'django_tables2',
     'crispy_forms',
 ]

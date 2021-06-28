@@ -21,14 +21,90 @@
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
 <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet"/>
 
+<script type="text/javascript">
+    $(document).ready(function () {
+    $('.navbar-light .dmenu').hover(function () {
+            $(this).find('.sm-menu').first().stop(true, true).slideDown(150);
+        }, function () {
+            $(this).find('.sm-menu').first().stop(true, true).slideUp(105)
+        });
+    });
+</script>
+
 <script>
   {% block chartjs %}
   {% endblock chartjs %}
 </script>
 
+<style type="text/css">
+    .social-part{
+      padding-right:20px;
+      padding-top: 10px;
+      float:right;
+    }
+    ul li a{
+      margin-right: 20px;
+    }
+</style>
 </head>
 <body>
     
+    <nav class="navbar navbar-expand-sm   navbar-light bg-light">
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarTogglerDemo03" aria-controls="navbarTogglerDemo03" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarTogglerDemo03">
+          <ul class="navbar-nav mr-auto mt-2 mt-lg-0">
+            <li class="nav-item">
+              <a class="nav-link" href="#">Home <span class="sr-only">(current)</span></a>
+            </li>
+            <li class="nav-item dropdown dmenu">
+            <a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-toggle="dropdown">
+              Securitizations
+            </a>
+            <div class="dropdown-menu sm-menu">
+              <a class="dropdown-item" href="/view_securitizations">View Securitizations</a>
+              <a class="dropdown-item" href="/view_transfers">View Transfers</a>
+              <a class="dropdown-item" href="/create_borrower">Create New Borrower</a>
+            </div>
+          </li>
+          <li class="nav-item dropdown dmenu">
+            <a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-toggle="dropdown">
+              Custodian Services
+            </a>
+            <div class="dropdown-menu sm-menu">
+              <a class="dropdown-item" href="#">Link1</a>
+              <a class="dropdown-item" href="#">Link2</a>
+              <a class="dropdown-item" href="#">Link3</a>
+            </div>
+          </li>
+          <li class="nav-item dropdown dmenu">
+            <a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-toggle="dropdown">
+              Margin Trading
+            </a>
+            <div class="dropdown-menu sm-menu">
+              <a class="dropdown-item" href="#">Link1</a>
+              <a class="dropdown-item" href="#">Link2</a>
+              <a class="dropdown-item" href="#">Link3</a>
+            </div>
+          </li>
+          <li class="nav-item dropdown dmenu">
+            <a class="nav-link dropdown-toggle" href="#" id="navbardrop" data-toggle="dropdown">
+              Unit Trusts
+            </a>
+            <div class="dropdown-menu sm-menu">
+              <a class="dropdown-item" href="#">Link1</a>
+              <a class="dropdown-item" href="#">Link2</a>
+              <a class="dropdown-item" href="#">Link3</a>
+            </div>
+          </li>
+          </ul>
+          <div class="social-part">
+            <a class="dropdown-item" href="/logout">Logout</a>
+          </div>
+        </div>
+      </nav>
     {% block content %}{% endblock content %}
     <!-- Bootstrap core JavaScript
 ================================================== -->
