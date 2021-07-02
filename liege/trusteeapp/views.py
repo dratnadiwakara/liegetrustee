@@ -110,7 +110,7 @@ def update_securitization_arranger_view(request,id):
 
     if request.method=="POST" and request.POST['formtype']=="update":
         form = update_securitization_arranger_form(request.POST,request.FILES,instance=sec)
-        print(request.POST['formtype'])
+        #print(request.POST['formtype'])
         if form.is_valid():
             sec = form.save(commit=False)
             #### better method to check if the file exists

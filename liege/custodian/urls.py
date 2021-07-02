@@ -6,4 +6,7 @@ from custodian import views as custodianviews
 
 urlpatterns = [
     path("",custodianviews.index),
+    path("uploaddocs",custodianviews.uploaddocs),
+    path("viewpf",custodianviews.pfsummary),
+    path("transhistory",custodianviews.transhistory),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

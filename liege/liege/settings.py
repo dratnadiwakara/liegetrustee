@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'custodian',
     'django_tables2',
     'crispy_forms',
+    'django.contrib.humanize',
 ]
 
 MIDDLEWARE = [

@@ -1,0 +1,135 @@
+{% extends "trusteeapp/base_trustee.html" %}
+
+{% block title %}
+Upload Documents
+{% endblock title %}
+
+{% load crispy_forms_tags %} 
+{% block content %}
+
+<div class="container"><h1>Daily Operations</h1>
+    <br/>
+    <div class="col-sm-4">
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Equity Prices</h5>
+          <p class="card-text">
+            <form method="POST" enctype="multipart/form-data" > {% csrf_token %}
+                {{form|crispy}}
+                <input type="hidden" name="doctype" value="equityprices"/>
+                <button type="submit",name="save" class="btn btn-success">Upload</button>
+                <br/>Last updated date
+            </form></p>
+        </div>
+    </div>
+    </div>
+    <div class="col-sm-4">
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">CDS Transactions</h5>
+          <p class="card-text">
+            <form method="POST" enctype="multipart/form-data" > {% csrf_token %}
+                {{form|crispy}}
+                <input type="hidden" name="doctype" value="cdstrades"/>
+                <button type="submit",name="save" class="btn btn-success">Upload</button>
+                <br/>Last updated date
+            </form>
+         </p>
+        </div>
+    </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Current Account Statements</h5>
+              <p class="card-text">
+                <form method="POST" enctype="multipart/form-data" > {% csrf_token %}
+                    {{form|crispy}}
+                    <input type="hidden" name="doctype" value="currentaccountbal"/>
+                    <button type="submit",name="save" class="btn btn-success">Upload</button>
+                    <br/>Last updated date
+                </form>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+<br/><br/>
+<div class="container">
+    <br/>
+    <div class="col-sm-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Calculate Client Balances</h5>
+              <p class="card-text">
+                <form method="POST" enctype="multipart/form-data" > {% csrf_token %}
+                    <input type="hidden" name="doctype" value="clientbalance"/>
+                    <button type="submit",name="save" class="btn btn-success">Upload</button>
+                    <br/>Last updated date
+                </form>
+              </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-4">
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Reconsile Margin Balances</h5>
+          <p class="card-text">
+              rec with core banking
+              <button type="submit",name="save" class="btn btn-success">Reconsile</button>
+        </p>
+        </div>
+    </div>
+    </div>
+    <div class="col-sm-4">
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Reconsile CDS Transfers</h5>
+          <p class="card-text">
+              with CDS net transfers
+              <button type="submit",name="save" class="btn btn-success">Reconsile</button>
+         </p>
+        </div>
+    </div>
+    </div>
+</div>
+<br/><br/>
+<div class="container">
+    <br/>
+    <div class="col-sm-4">
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Dividend Announcements</h5>
+          <p class="card-text">
+              rec with core banking
+              <button type="submit",name="save" class="btn btn-success">Reconsile</button>
+        </p>
+        </div>
+    </div>
+    </div>
+    <div class="col-sm-4">
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Splits</h5>
+          <p class="card-text">
+              with CDS net transfers
+              <button type="submit",name="save" class="btn btn-success">Reconsile</button>
+         </p>
+        </div>
+    </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Scrip Dividend</h5>
+              <p class="card-text">
+                <h4>xxx</h4>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
+{% endblock content %}

@@ -111,14 +111,16 @@ View Securitization
                     </form>
         </div>
         <div class="tab-pane" id="2a">
-            {% if securitization.investor_set.exists  %}
+                
                 <br/><br/> 
+                {% if securitization.investor_set.exists  %}
                     <table class="table table-striped table-bordered dataTable showtable" style="width: 100%;" >
                         <thead><tr><th>Investor</th><th>Address</th><th>Email</th><th>Phone</th><th>Account Number</th><th>Bank/Branch</th></tr></thead>
                         <tbody>
                             {% for sec in securitization.investor_set.all %}<tr><td>{{sec.investor_name}}</td><td>{{sec.investor_address}}</td><td>{{sec.investor_email}}</td><td>{{sec.investor_phone}}</td><td>{{sec.investor_account_no}}</td><td>{{sec.investor_account_bank}}/{{sec.investor_account_branch}}</td></tr>{% endfor %}
                         </tbody>
                     </table>
+                {% endif %}
                     <!-- Add Investor Form: Only allow if signed =0-->
                     <br/><br/><h3>Add Investors</h3><br/><br/>
                     <form method="POST" enctype="multipart/form-data">
@@ -134,7 +136,7 @@ View Securitization
                         </form>
                         {{investor_table_html|safe}}
                     {% endif %}
-                {% endif %}
+                
         </div>
         <div class="tab-pane" id="3a">
             {% if securitization.investment_set.exists  %}
@@ -144,6 +146,7 @@ View Securitization
                     {% for sec in securitization.investment_set.all %}<tr><td>{{sec.investor.investor_name}}</td><td>{{sec.investment_date}}</td><td>{{sec.maturity_date}}</td><td>{{sec.investment_amount}}</td><td>{{sec.interest_rate_type}}</td><td>{{sec.fixed_interest_rate}}</td><td>{{sec.variable_rate_spread}}</td><td>{{sec.variable_rate_reset_freq}}</td><td>{{sec.variable_rate_floor}}</td><td>{{sec.variable_rate_cap}}</td><td>{{sec.funds_received}}</td><td>{{sec.maturity_proceeds_transfered}}</td></tr>{% endfor %}
                 </tbody>
             </table>
+            {% endif %}
             <br/><br/><h3>Add Investments</h3><br/><br/>
             <form method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
@@ -159,7 +162,7 @@ View Securitization
                 </form>
                 {{investments_table_html|safe}}
             {% endif %}
-            {% endif %}
+            
         </div>
         <div class="tab-pane" id="4a">
             {% if securitization.transfer_set.exists  %}
@@ -182,6 +185,7 @@ View Securitization
                     {% for sec in securitization.security_set.all %}<tr><td>{{sec.added_date}}</td><td>{{sec.engine_number}}</td><td>{{sec.chassis_number}}</td><td>{{sec.monthly_payment}}</td><td>{{sec.vehicle_number}}</td><td>{{sec.last_payment_date}}</td></tr>{% endfor %}
                 </tbody>
             </table>
+            {% endif %}
             <h3>Add Securities</h3>
             <form method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
@@ -196,7 +200,7 @@ View Securitization
                     </form>
                     {{securities_table_html|safe}}
             {% endif %}
-            {% endif %}
+            
         </div>
         <div class="tab-pane" id="6a">
             Table showing messages and ability to send a message to the trustee
