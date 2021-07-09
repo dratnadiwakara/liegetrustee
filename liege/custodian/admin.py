@@ -8,6 +8,8 @@ admin.site.register(ListedEquity)
 admin.site.register(StockBroker)
 admin.site.register(MarginAccount)
 admin.site.register(CDSAccount)
+admin.site.register(Client)
+admin.site.register(ClientBalance)
 
 @admin.register(CustodyClient)
 class CustodyClientAdmin(admin.ModelAdmin):

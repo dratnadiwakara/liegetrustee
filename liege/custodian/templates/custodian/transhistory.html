@@ -1,5 +1,5 @@
 
-{% extends "trusteeapp/base_arranger.html" %}
+{% extends "trusteeapp/base_custodyclient.html" %}
 {% block title %}
 Create New Securitization
 {% endblock title %}
@@ -7,6 +7,7 @@ Create New Securitization
 
 
 {% load crispy_forms_tags %} 
+{% block active2 %}active{% endblock active2 %}
 {% block content %}
 
 <div class="container"><h1>Transaction History</h1><p>Last updated on xx/xx/xxx (use last CDS data upload date)</p>
@@ -39,7 +40,7 @@ Create New Securitization
                     <td>{{sec.current_account_sweep}}</td>
                     <td>{{sec.trade.trade_quantity}}</td>
                     <td>{{sec.trade.trade_price}}</td>
-                    <td>{{sec.trade.amount}}</td>
+                    <td>{% if trade %}{{sec.trade.amount}}{% else %}{{sec.amount}}{% endif %}</td>
                     <td>{{sec.trade.fees}}</td>
                     <td>{{sec.trade.netamount}}</td>
                     <td>ADD BAL</td>

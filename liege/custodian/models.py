@@ -27,26 +27,44 @@ History tables for All Uploads, date,time, file, username
 
 class Client(models.Model):
     
-    CLIENT_TYPES = [('custodian','Custodian Client'),
-                    ('margin','Margin Client'),
-                    ('unittrust','Unit Trust'),]
+    CLIENT_TYPES = [('custodian','Custodian Client')]#,
+                    #('margin','Margin Client'),
+                    #('unittrust','Unit Trust'),]
+    RISK_LEVEL = [('low','Low'),('moderate',"Moderate"),('high','High')]
 
     client_name = models.CharField(max_length=200)
     client_address = models.CharField(max_length=200)
     client_email = models.EmailField()
     client_phone = models.CharField(max_length=20)
     client_type = models.CharField(max_length=20,choices=CLIENT_TYPES)
+    client_birthday = models.DateField(blank=True,null=True)
+    cds_no_cse = models.CharField(max_length=50)#### ,unique=True
+    cds_no_cbsl = models.CharField(max_length=50) #### ,unique=True
+    margin_interest_rate_spread = models.FloatField(blank=True,null=True)
+    current_account_number = models.PositiveIntegerField(blank=True,null=True,unique=True)
+    loan_account_number = models.PositiveIntegerField(blank=True,null=True,unique=True)
+    shariah_compliant = models.BooleanField(default=False)
+    risk_appetite = models.CharField(max_length=200,choices=RISK_LEVEL,default="moderate")
+    target_returns = models.FloatField(default=0.1)
     portfolio_value = models.FloatField(default=0,null=True)
     portfolio_value_date = models.DateField(null=True)
     margin_account_balance = models.FloatField(default=0)
-    margin_account_balance_date = models.DateField()
-    maximum_margin = models.FloatField()
-    maximum_margin_date = models.DateField()
-    payable_amount = models.FloatField()
-    payable_amount_date = models.DateField()
-    receivable_amount = models.FloatField()
-    receivable_amount_date = models.DateField()
-    client_id = models.CharField(max_length=200)
+    margin_account_balance_date = models.DateField(auto_now_add=True, blank=True)
+    maximum_margin = models.FloatField(default=0)
+    maximum_margin_date = models.DateField(auto_now_add=True, blank=True)
+    payable_amount = models.FloatField(default=0)
+    payable_amount_date = models.DateField(auto_now_add=True, blank=True)
+    receivable_amount = models.FloatField(default=0)
+    receivable_amount_date = models.DateField(auto_now_add=True, blank=True)
+    client_id = models.CharField(max_length=200,unique=True)
+
+    def __str__(self):
+        return self.client_name+" ("+self.client_id+")"
+    
+    @property
+    def purchasing_power(self):
+        return self.maximum_margin+self.margin_account_balance
+
 
 
 
@@ -59,6 +77,22 @@ class CustodyClient(Client):
     class Meta:
         proxy = True
 
+class ClientBalance(models.Model):
+    client = models.ForeignKey(Client,on_delete=PROTECT)
+    value_date = models.DateField(auto_now_add=True, blank=True)
+    pf_value = models.FloatField()
+    margin_value = models.FloatField()
+    margin_balance = models.FloatField(null=True)
+    pf_cost = models.FloatField()
+
+# from custodian.models import *
+# import datetime
+# import pandas as pd
+# eq=pd.read_csv("C:/Users/Dimuthu/Downloads/eq.csv",header=None,dtype={4:str}) 
+# eq['security_id'] = eq[[2,3,4]].agg('-'.join, axis=1)
+# for index,row in eq.iterrows():
+#   e = ListedEquity(ticker=row['security_id'],company_name=row[11],current_price=row[9],current_price_date=datetime.date.today(),in_sl20=False)
+#   e.save()
 class ListedEquity(models.Model):
     ticker = models.CharField(max_length=20)
     company_name = models.CharField(max_length=100)
@@ -67,15 +101,22 @@ class ListedEquity(models.Model):
     in_sl20 = models.BooleanField()
     margin_pct = models.FloatField(default=0.50)
 
+    def __str__(self):
+        return self.ticker
+
 class DividendAnnouncements(models.Model):
     equity = models.ForeignKey(ListedEquity,on_delete=CASCADE)
     dividend_amount = models.FloatField()
     ex_date = models.DateField()
-    updated_date = models.DateTimeField(auto_now_add=True, blank=True)
+    updated_date = models.DateField(auto_now_add=True, blank=True)
 
 class StockBroker(models.Model):
     broker_name=models.CharField(max_length=200)
     broker_code=models.CharField(max_length=5,default="AAA")
+
+    def __str__(self):
+        return self.broker_code+" "+self.broker_name
+
 
 class EquityTrade(models.Model):
     #tr = EquityTrade(client=CustodyClient.objects.get(id=1),stock=ListedEquity.objects.get(id=1),trade_price=200,trade_quantity=2000,trade_direction='buy',broker=StockBroker.objects.get(id=1),trade_date=datetime.date.today())
@@ -123,25 +164,29 @@ class EquityTrade(models.Model):
         elif self.trade_direction=='sell':
             amt = self.trade_price*self.trade_quantity-fees
 
-        pos = self.client.equityholding_set.filter(stock=self.stock).filter(broker=self.broker)
-        if(pos.count()==1) :
-            pos = pos[0]
-            pos.cost_basis = (pos.cost_basis*pos.quantity+self.trade_quantity*self.trade_price)/(pos.quantity+self.trade_quantity)
-            pos.quantity = pos.quantity+self.trade_quantity
-        else:
-            pos = EquityHolding(client=self.client,stock=self.stock,quantity = self.trade_quantity,cost_basis=self.trade_price,broker=self.broker)
-        pos.save()
+        try:
+            #### this is very critical. Need to makesure allsteps are completed. Otherwise, no changes should be made.
+            super(EquityTrade, self).save(*args, **kwargs)
+            pos = self.client.equityholding_set.filter(stock=self.stock).filter(broker=self.broker)
+            if(pos.count()==1) :
+                pos = pos[0]
+                pos.cost_basis = (pos.cost_basis*pos.quantity+self.trade_quantity*self.trade_price)/(pos.quantity+self.trade_quantity)
+                pos.quantity = pos.quantity+self.trade_quantity
+            else:
+                pos = EquityHolding(client=self.client,stock=self.stock,quantity = self.trade_quantity,cost_basis=self.trade_price,broker=self.broker)
+            pos.save()
 
-        super(EquityTrade, self).save(*args, **kwargs)
+            # MarginAccount entry
+            marginacc = MarginAccount(client=self.client,trade=self,trade_date=self.trade_date,settlement_date=self.settlement_date,debit=self.trade_direction=='buy',amount=amt)
+            marginacc.save()
+            # CDS Account entry
+            cdsacc = CDSAccount(client=self.client,trade=self,settlement_date=self.settlement_date,trade_date=self.trade_date,credit=self.trade_direction=='buy',amount=amt)
+            cdsacc.save()
+        except:
+            print("error creating trade")
+        
 
-        # MarginAccount entry
-        marginacc = MarginAccount(client=self.client,trade=self,trade_date=self.trade_date,settlement_date=self.settlement_date,debit=self.trade_direction=='buy',amount=amt)
-        marginacc.save()
-        # CDS Account entry
-        cdsacc = CDSAccount(client=self.client,trade=self,settlement_date=self.settlement_date,trade_date=self.trade_date,credit=self.trade_direction=='buy',amount=amt)
-        cdsacc.save()
-
-        super(EquityTrade, self).save(*args, **kwargs)
+        
 
 
 class EquityHolding(models.Model):
@@ -168,10 +213,10 @@ class EquityHolding(models.Model):
 class MarginAccount(models.Model):
     client = models.ForeignKey(Client,on_delete=PROTECT)
     current_account_sweep = models.BooleanField(default=False)
-    trade = models.ForeignKey(EquityTrade,on_delete=CASCADE)
+    trade = models.ForeignKey(EquityTrade,on_delete=CASCADE,null=True)
     trade_date = models.DateField()
-    settlement_date = models.DateField()
-    debit = models.BooleanField()
+    settlement_date = models.DateField(null=True)
+    debit = models.BooleanField(null=True)
     amount = models.FloatField()
 
 class CDSAccount(models.Model):

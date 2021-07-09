@@ -1,0 +1,15 @@
+{% extends "trusteeapp/base_trustee.html" %}
+
+{% block title %}
+Create A New Client
+{% endblock title %}
+
+{% load crispy_forms_tags %} 
+{% block content %}
+                <h3>Create A New Client</h3>
+    
+                <form method="POST" > {% csrf_token %}
+                    {{form|crispy}}
+                    <button type="submit",name="save" class="btn btn-success">Create Borrower</button>
+                </form>
+{% endblock content %}

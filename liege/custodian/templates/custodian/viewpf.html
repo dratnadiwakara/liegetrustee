@@ -1,23 +1,67 @@
 
-{% extends "trusteeapp/base_arranger.html" %}
+{% extends "trusteeapp/base_custodyclient.html" %}
 {% block title %}
-Create New Securitization
+Home | {{client.client_name}} (Account : {{client.client_id}})</h4><p>Last updated on xx/xx/xxx (use last CDS data upload date)
 {% endblock title %}
 
 
+{% block chartjs %}
+$(document).ready(function(){
+    var ctx = document.getElementById('myChart');
+    ctx.height = 100;
+var myChart = new Chart(ctx, {
+type: 'line',
+fill: false,
+data: {
+    labels: [ {% for i in dates %}'{{i}}',{% endfor %}],
+    datasets: [{
+        label: 'Portfolio Value',
+        data: [ {% for i in pf_value %}'{{i}}',{% endfor %}],
+        borderWidth: 2,
+        borderColor: 'rgba(211, 77, 67, 1)',
+        backgroundColor:'rgba(213, 101, 92, 1)',
+        fill:false,
+    },
+    {
+        label: 'Margin Used',
+        data: [{% for i in margin_balance %}'{{i}}',{% endfor %}],
+        borderWidth: 2,
+        borderColor: 'rgba(211, 54, 81 , 1)',
+        backgroundColor:'rgba(211, 67, 92, 1)',
+        fill:false,
+    },
+    {
+        label: 'Cost of Portfolio',
+        data: [{% for i in pf_cost %}'{{i}}',{% endfor %}],
+        borderWidth: 2,
+        borderColor: 'rgba(30, 94, 9, 1)',
+        backgroundColor:'rgba(46, 98, 29, 1)',
+        fill:false,
+    }]
+},
+options: {
+    scales: {
+        y: {
+            beginAtZero: true
+        }
+    }
+}
+});
+});
 
+{% endblock chartjs %}
 {% load crispy_forms_tags %} 
 {% load humanize %}
+{% block active1 %}active{% endblock active1 %}
 {% block content %}
-
-<div class="container"><h1>Portfolio Snapshot</h1><p>Last updated on xx/xx/xxx (use last CDS data upload date)</p>
+<div class="container"><br/><br/><h4>{{client.client_name}} (Account : {{client.client_id}})</h4><p>Last updated on xx/xx/xxx (use last CDS data upload date)</p>
     <br/>
     <div class="col-sm-3">
     <div class="card">
         <div class="card-body">
             <h5 class="card-title">Portfolio Value</h5>
           <p class="card-text">
-            <h4>{{mktvalue}}</h4>
+            <h4>{{client.portfolio_value|floatformat:2|intcomma}}</h4>
         </div>
     </div>
     </div>
@@ -26,7 +70,7 @@ Create New Securitization
         <div class="card-body">
             <h5 class="card-title">Margin Available</h5>
           <p class="card-text">
-            <h4>{{marginvalue}}</h4>
+            <h4>{{client.maximum_margin|floatformat:2|intcomma}}</h4>
         </div>
     </div>
     </div>
@@ -35,7 +79,7 @@ Create New Securitization
             <div class="card-body">
                 <h5 class="card-title">Margin Used</h5>
               <p class="card-text">
-                <h4>xxx</h4>
+                <h4>{{client.margin_account_balance|floatformat:2|intcomma}}</h4>
             </div>
         </div>
     </div>
@@ -44,9 +88,21 @@ Create New Securitization
             <div class="card-body">
                 <h5 class="card-title">Purchasing Power</h5>
               <p class="card-text">
-                <h4>xxx</h4>
+                <h4>{{client.purchasing_power|floatformat:2|intcomma}}</h4>
             </div>
         </div>
+    </div>
+</div>
+
+<div class="container">
+    <br/>
+    <div class="col-sm-12">
+    <div class="card">
+        <div class="card-body">
+          <p class="card-text">
+            <canvas id="myChart" width="400" height="400"></canvas></p>
+        </div>
+    </div>
     </div>
 </div>
 
