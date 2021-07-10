@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'trusteeapp.apps.TrusteeappConfig',
     'custodian',
+    'compound',
     'django_tables2',
     'crispy_forms',
     'django.contrib.humanize',
