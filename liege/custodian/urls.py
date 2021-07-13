@@ -7,8 +7,8 @@ from custodian import views as custodianviews
 urlpatterns = [
     path("",custodianviews.index),
     path("uploaddocs",custodianviews.uploaddocs),
-    path("viewpf",custodianviews.pfsummary),
-    path("transhistory",custodianviews.transhistory),
+    path("viewpf/<int:id>/",custodianviews.pfsummary),
+    path("transhistory/<int:id>/",custodianviews.transhistory),
     path("createclient",custodianviews.create_client),
     path("createholding/<int:id>/",custodianviews.create_holdings),
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

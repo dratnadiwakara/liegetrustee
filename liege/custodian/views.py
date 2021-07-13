@@ -2,6 +2,7 @@ from django.shortcuts import redirect, render
 from django.http import HttpResponse
 from custodian.forms import *
 from custodian.models import *
+from compound.models import *
 import pandas as pd
 from django.db.models import Sum
 import datetime
@@ -43,13 +44,13 @@ def create_holdings(request,id):
 
 
 
-def transhistory(request):
-    context={"transhistory": MarginAccount.objects.filter(client=Client.objects.filter(client_id="11130-LC-00")[0]).order_by('-trade_date')}
+def transhistory(request,id):
+    context={"transhistory": MarginAccount.objects.filter(client=CustodyClient.objects.get(id=id)).order_by('-trade_date')}
     return render(request,"custodian/transhistory.html",context)
 
 
-def pfsummary(request):
-    client = Client.objects.filter(client_id="11130-LC-00")[0]
+def pfsummary(request,id):
+    client = CustodyClient.objects.get(id=id)
     #### replace this with logged in client
     holdings = EquityHolding.objects.filter(client=client)
  
@@ -67,6 +68,14 @@ def pfsummary(request):
     context["margin_balance"]=cb['margin_balance'].to_list()
     context["pf_cost"]=cb['pf_cost'].to_list()
     
+    
+    if client.client_type=="unittrust":
+        context["lcol"] = 2
+    else:
+        context["lcol"] = 3
+
+    
+    
     return render(request,"custodian/viewpf.html",context)
     
 
@@ -75,20 +84,78 @@ def uploaddocs(request):
     context = {"form":form}
 
 
+    if request.method=="POST" and request.POST['doctype']=="unittrustcurrentaccounttrans":
+        if request.FILES.get('datafile', False)!=False:
+            #### check if transdate is today
+            utcuracc = pd.read_csv(request.FILES['datafile'])
+            #print(utcuracc)
+        
+            for index,row in utcuracc.iterrows():
+                fund = CustodyClient.objects.filter(current_account_number=row['AccountNo'])[0]
+                ca = CurrentAccount(client=fund,transaction_date=datetime.date.today(),amount=row['Amount'],narration = row['Narration'])
+                ca.save()
+                
+                if fund.client_type == 'unittrust':
+                    trans_type = str(row['Narration']).split('.')[0]
+                    holding = int(str(row['Narration']).split('.')[1])
+                    if trans_type.lower()=='p':
+                        hl = UnitTrustHolding.objects.get(id=holding)
+                        tr = Transaction(
+                                unit_trust_holding=hl,
+                                transaction_type = 'purchase',
+                                purchase_amount = row['Amount'],
+                                purchase_price = hl.unit_trust.unit_ask_price,
+                                number_of_units_purchased = row['Amount']/hl.unit_trust.unit_ask_price)
+                        
+                        hl.cost_basis = (tr.purchase_price*tr.number_of_units_purchased+hl.cost_basis*hl.number_of_units)/(tr.number_of_units_purchased+hl.number_of_units)
+                        hl.number_of_units = hl.number_of_units+tr.number_of_units_purchased
+                        hl.save()   
+                        tr.save()
+                        ut = hl.unit_trust
+                        ut.number_of_units = ut.number_of_units+tr.number_of_units_purchased
+                        ut.save()
+
+            
+        for accbal in CurrentAccount.objects.values('client').annotate(sumamount=Sum('amount')).order_by('client'):
+            fund = CustodyClient.objects.get(id=accbal['client'])
+
+            try:
+                mb = MarginAccount.objects.filter(client=fund).aggregate(Sum('amount'))['amount__sum']*(-1)
+            except:
+                mb=0
+            
+            if accbal['sumamount']<0 or accbal['sumamount'] <= mb:
+                sweep = accbal['sumamount']
+            else:
+                sweep = mb
+
+            ma = MarginAccount(client=fund,current_account_sweep=True,trade_date=datetime.date.today(),amount=sweep)
+            ca = CurrentAccount(client=fund,transaction_date=datetime.date.today(),amount=sweep*(-1),narration = "Margin sweep")
+            ma.save()
+            ca.save()
+
+        for cl in  CustodyClient.objects.filter(client_type='unittrust'):
+            try:
+                cl.unit_bid_price = (cl.portfolio_value - cl.margin_account_balance)/cl.number_of_units
+                cl.unit_ask_price = cl.unit_bid_price
+                cl.save()
+            except:
+                pass
+            
+   
     if request.method=="POST" and request.POST['doctype']=="currentaccountbal":
         if request.FILES.get('datafile', False)!=False:
-            curacc = pd.read_csv(request.FILES['datafile'])
-            print(curacc)
+            pass
+            """ curacc = pd.read_csv(request.FILES['datafile'])
             curacc['dateofbalance']=pd.to_datetime(curacc['dateofbalance'])
             for index,row in curacc.iterrows():
                 #### check if dateofbalance is today.
                 cl = CustodyClient.objects.filter(current_account_number=row['accountnumber'])[0]
-                print(cl)
-                print(row['dateofbalance'])
-                print(row['balanceamount'])
                 #### show if cl doesnot exist
+                mb = MarginAccount.objects.filter(client=cl).aggregate(Sum('amount'))['amount__sum']
                 ma = MarginAccount(client=cl,current_account_sweep=True,trade_date=row['dateofbalance'],amount=row['balanceamount'])
                 ma.save()
+            """
 
     if request.method=="POST" and request.POST['doctype']=="reconmargin":
         #### receive the margin balances from corebanking
@@ -110,23 +177,42 @@ def uploaddocs(request):
             cl.margin_account_balance = MarginAccount.objects.filter(client=cl).aggregate(Sum('amount'))['amount__sum']
             if(cl.margin_account_balance==None):
                 cl.margin_account_balance=0
-            print(cl)
+            #print(cl)
             pf_value = 0
             margin_value = 0
             pf_cost = 0
+
+            # equity
             holdings = EquityHolding.objects.filter(client=cl)
             for h in holdings:
                 pf_value = pf_value+h.marketvalue
                 margin_value = margin_value+h.marginvalue
                 pf_cost = pf_cost+h.cost_basis*h.quantity
-            cb = ClientBalance(client=cl,pf_value=pf_value,margin_value=margin_value,margin_balance=cl.margin_account_balance,pf_cost=pf_cost)
+            
+            # cash
+            cl.cash_balance = CurrentAccount.objects.filter(client=cl).aggregate(Sum('amount'))['amount__sum']
+            pf_value = pf_value + cl.cash_balance
+            pf_cost = pf_cost + cl.cash_balance
+
+            if cl.client_type=='unittrust':
+                cb = ClientBalance(client=cl,pf_value=pf_value,margin_value=margin_value,margin_balance=cl.margin_account_balance,pf_cost=pf_cost,
+                                    unit_bid_price= cl.unit_bid_price,unit_ask_price=cl.unit_ask_price,number_of_units=cl.number_of_units)
+            else:
+                cb = ClientBalance(client=cl,pf_value=pf_value,margin_value=margin_value,margin_balance=cl.margin_account_balance,pf_cost=pf_cost)
             cb.save()
-            cl.portfolio_value = pf_value
+            
+            cl.portfolio_value = pf_value 
             cl.maximum_margin = margin_value
             cl.save()
             #### set payable amount
             #### set receivable amount
             #### add margin interest as an entry to MarginAccount
+        
+        holdings = UnitTrustHolding.objects.all()
+        for hl in holdings:
+            uthh = UnitTrustHoldingHistory(unit_trust_holding=hl,number_of_units=hl.number_of_units,unit_price = hl.unit_trust.unit_ask_price)
+            uthh.save()
+
 
     if request.method=="POST" and request.POST['doctype']=="equityprices":
         if request.FILES.get('datafile', False)!=False:
@@ -161,9 +247,12 @@ def uploaddocs(request):
             cdsdata['settlement_date']=pd.to_datetime(cdsdata['settlement_date'])
             cdsdata['buy_sell1'] = np.where(cdsdata['buy_sell1'].str.strip()=='BOUGHT FROM','buy','sell')
 
+            """for index,row in cdsdata.iterrows():
+                print(row['broker_code'])
+            """
             trades = [
                 EquityTrade(
-                    client=CustodyClient.objects.filter(client_id=row['client_id'].strip())[0],
+                    client=CustodyClient.objects.filter(cds_no_cse=row['client_id'].strip())[0],
                     stock=ListedEquity.objects.filter(ticker=row['security_id'].strip())[0],
                     trade_price=row['price'],
                     trade_quantity=row['qty'],
@@ -190,5 +279,5 @@ def uploaddocs(request):
                     #    print("trade already exists") #### better way  to makesure there are no trade duplicates?
             except Exception as e:
                 print('Error While Importing Data: ',e)
-
+            
     return render(request,"custodian/uploaddocuments.html",context)

@@ -15,7 +15,7 @@ class ClientForm(forms.ModelForm):
         fields = ('client_name','client_address','client_email','client_phone',
         'client_type','client_birthday','margin_interest_rate_spread','current_account_number',
         'loan_account_number','shariah_compliant','risk_appetite','target_returns',
-        'cds_no_cse','cds_no_cbsl','client_id')
+        'cds_no_cse','cds_no_cbsl')
         #### date pricker for birthday
 
 class HoldingForm(forms.ModelForm):

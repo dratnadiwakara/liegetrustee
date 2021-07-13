@@ -5,5 +5,8 @@ from django.conf.urls.static import static
 from compound import views as compoundviews
 
 urlpatterns = [
-    path("",compoundviews.index),
+    path("<int:id>/",compoundviews.index),
+    path("createaccount/<int:id>/",compoundviews.create_unittrust_holdings),
+    path("fundtransfer/<int:id>/",compoundviews.transfer_funds)
+
 ]+ static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

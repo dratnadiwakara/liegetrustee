@@ -49,7 +49,8 @@ body {
   color: #f2f2f2;
   text-align: center;
   padding: 14px 16px;
-  text-decoration: none;
+text-decoration: none;
+<!--  -->
   font-size: 17px;
 }
 
@@ -72,12 +73,56 @@ body {
     background-color: #f1f1f1;
     height: 100%;
 }
+
+.card1{
+    position: relative;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    min-width: 0;
+    word-wrap: break-word;
+    background-color: #3c2fc1;
+    background-clip: border-box;
+    border: 1px solid rgba(0,0,0,.125);
+    border-radius: .25rem;
+
+}
+
+.card1 .value { float:right }
+.card1 .title { float:left }
+
+.card2{
+  position: relative;
+    display: -ms-flexbox;
+    display: flex;
+    -ms-flex-direction: column;
+    flex-direction: column;
+    min-width: 0;
+    word-wrap: break-word;
+    background-color: rgb(221, 216, 216);
+    background-clip: border-box;
+    border: 1px solid rgba(0,0,0,.125);
+    border-radius: .25rem;
+    margin: 15px;
+}
+
+.card2 .value { float:right }
+.card2 .title { float:left }
+
+.card1-body {
+    -ms-flex: 1 1 auto;
+    flex: 1 1 auto;
+    min-height: 1px;
+    padding: 1.25rem;
+    color:white;
+}
 </style>
 </head>
 <body>
 
 <div class="navbar">
-  <a href="#home" class="active">Home</a>
+  <a href="/compound/1/" class="active">Home</a>
   <a href="#news">News</a>
   <a href="#contact">Contact</a>
 </div>

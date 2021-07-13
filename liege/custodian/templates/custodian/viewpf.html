@@ -1,7 +1,7 @@
 
 {% extends "trusteeapp/base_custodyclient.html" %}
 {% block title %}
-Home | {{client.client_name}} (Account : {{client.client_id}})</h4><p>Last updated on xx/xx/xxx (use last CDS data upload date)
+Home | {{client.client_name}} (Account : {{client.cds_no_cse}})</h4><p>Last updated on xx/xx/xxx (use last CDS data upload date)
 {% endblock title %}
 
 
@@ -54,9 +54,9 @@ options: {
 {% load humanize %}
 {% block active1 %}active{% endblock active1 %}
 {% block content %}
-<div class="container"><br/><br/><h4>{{client.client_name}} (Account : {{client.client_id}})</h4><p>Last updated on xx/xx/xxx (use last CDS data upload date)</p>
+<div class="container"><br/><br/><h4>{{client.client_name}} (Account : {{client.cds_no_cse}})</h4><p>Last updated on xx/xx/xxx (use last CDS data upload date)</p>
     <br/>
-    <div class="col-sm-3">
+    <div class="col-sm-{{lcol}}">
     <div class="card">
         <div class="card-body">
             <h5 class="card-title">Portfolio Value</h5>
@@ -65,16 +65,7 @@ options: {
         </div>
     </div>
     </div>
-    <div class="col-sm-3">
-    <div class="card">
-        <div class="card-body">
-            <h5 class="card-title">Margin Available</h5>
-          <p class="card-text">
-            <h4>{{client.maximum_margin|floatformat:2|intcomma}}</h4>
-        </div>
-    </div>
-    </div>
-    <div class="col-sm-3">
+    <div class="col-sm-{{lcol}}">
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">Margin Used</h5>
@@ -83,7 +74,7 @@ options: {
             </div>
         </div>
     </div>
-    <div class="col-sm-3">
+    <div class="col-sm-{{lcol}}">
         <div class="card">
             <div class="card-body">
                 <h5 class="card-title">Purchasing Power</h5>
@@ -92,6 +83,36 @@ options: {
             </div>
         </div>
     </div>
+    <div class="col-sm-{{lcol}}">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Cash Balance</h5>
+              <p class="card-text">
+                <h4>{{client.cash_balance|floatformat:2|intcomma}}</h4>
+            </div>
+        </div>
+    </div>
+    {% if lcol == 2 %}
+    <div class="col-sm-{{lcol}}">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">No Units</h5>
+              <p class="card-text">
+                <h4>{{client.number_of_units|floatformat:2|intcomma}}</h4>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-{{lcol}}">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Unit Price</h5>
+              <p class="card-text">
+                <h4>{{client.unit_bid_price|floatformat:2|intcomma}}/{{client.unit_ask_price|floatformat:2|intcomma}}</h4>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
 </div>
 
 <div class="container">
@@ -108,6 +129,7 @@ options: {
 
 <div class="container">
     <br/>
+    <h4>Equity Portfolio</h4>
     <div class="col-sm-12">
     <div class="card">
         <div class="card-body">

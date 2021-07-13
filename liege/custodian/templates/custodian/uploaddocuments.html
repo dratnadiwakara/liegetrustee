@@ -41,14 +41,16 @@ Upload Documents
     <div class="col-sm-4">
         <div class="card">
             <div class="card-body">
-                <h5 class="card-title">Current Account Statements</h5>
-              <p class="card-text">
-                <form method="POST" enctype="multipart/form-data" > {% csrf_token %}
-                    {{form|crispy}}
-                    <input type="hidden" name="doctype" value="currentaccountbal"/>
-                    <button type="submit",name="save" class="btn btn-success">Upload</button>
-                    <br/>Last updated date
-                </form>
+                <h5 class="card-title">Current Account Transactions</h5>
+                <p class="card-text">
+                  <form method="POST" enctype="multipart/form-data" > {% csrf_token %}
+                      {{form|crispy}}
+                      <input type="hidden" name="doctype" value="unittrustcurrentaccounttrans"/>
+                      <button type="submit",name="save" class="btn btn-success">Upload</button>
+                      <br/>Last updated date
+                  </form>
+              </p>
+                
             </div>
         </div>
     </div>
@@ -97,6 +99,49 @@ Upload Documents
     </div>
     </div>
 </div>
+<br/><br/>
+<div class="container">
+    <br/>
+    <div class="col-sm-4">
+    <div class="card">
+        <div class="card-body">
+           
+            <h5 class="card-title">Current Account Statements - Reconsile</h5>
+              <p class="card-text">
+                <form method="POST" enctype="multipart/form-data" > {% csrf_token %}
+                    {{form|crispy}}
+                    <input type="hidden" name="doctype" value="currentaccountbal"/>
+                    <button type="submit",name="save" class="btn btn-success">Upload</button>
+                    <br/>Last updated date
+                </form>
+              </p>
+
+        </div>
+    </div>
+    </div>
+    <div class="col-sm-4">
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title">Splits</h5>
+          <p class="card-text">
+              with CDS net transfers
+              <button type="submit",name="save" class="btn btn-success">Reconsile</button>
+         </p>
+        </div>
+    </div>
+    </div>
+    <div class="col-sm-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Scrip Dividend</h5>
+              <p class="card-text">
+                <h4>xxx</h4>
+            </div>
+        </div>
+    </div>
+    
+</div>
+
 <br/><br/>
 <div class="container">
     <br/>

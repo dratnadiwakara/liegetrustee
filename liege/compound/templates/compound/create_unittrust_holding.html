@@ -1,0 +1,22 @@
+{% extends "compound/base_compound.html" %}
+
+{% block title %}
+Create Account
+{% endblock title %}
+
+{% load crispy_forms_tags %} 
+{% load humanize %}
+{% block content %}
+                <h3>Create Account</h3>
+                {{unit_trust_investor}}
+                
+                <form method="POST" > {% csrf_token %}
+                    {{form|crispy}}
+                    <button type="submit",name="save" class="btn btn-success">Create Borrower</button>
+                </form>
+
+                <b>show predicted fv under different scenarios</b>
+{% endblock content %}
+
+<!-- Table showing the list of current holdings -->
+<!-- Client is already set in previous view. Not able to change client here. Should be passed from context-->

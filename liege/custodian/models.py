@@ -25,11 +25,11 @@ Update ClientHistory
 History tables for All Uploads, date,time, file, username
 """
 
-class Client(models.Model):
+class CustodyClient(models.Model):
     
-    CLIENT_TYPES = [('custodian','Custodian Client')]#,
-                    #('margin','Margin Client'),
-                    #('unittrust','Unit Trust'),]
+    CLIENT_TYPES = [('custodian','Custodian Client'),
+                    
+                    ('unittrust','Unit Trust'),]
     RISK_LEVEL = [('low','Low'),('moderate',"Moderate"),('high','High')]
 
     client_name = models.CharField(max_length=200)
@@ -38,14 +38,15 @@ class Client(models.Model):
     client_phone = models.CharField(max_length=20)
     client_type = models.CharField(max_length=20,choices=CLIENT_TYPES)
     client_birthday = models.DateField(blank=True,null=True)
-    cds_no_cse = models.CharField(max_length=50)#### ,unique=True
-    cds_no_cbsl = models.CharField(max_length=50) #### ,unique=True
+    cds_no_cse = models.CharField(max_length=50,unique=True)#### 
+    cds_no_cbsl = models.CharField(max_length=50,unique=True) #### 
     margin_interest_rate_spread = models.FloatField(blank=True,null=True)
     current_account_number = models.PositiveIntegerField(blank=True,null=True,unique=True)
     loan_account_number = models.PositiveIntegerField(blank=True,null=True,unique=True)
     shariah_compliant = models.BooleanField(default=False)
     risk_appetite = models.CharField(max_length=200,choices=RISK_LEVEL,default="moderate")
     target_returns = models.FloatField(default=0.1)
+    cash_balance = models.FloatField(default=0,null=True)
     portfolio_value = models.FloatField(default=0,null=True)
     portfolio_value_date = models.DateField(null=True)
     margin_account_balance = models.FloatField(default=0)
@@ -56,43 +57,31 @@ class Client(models.Model):
     payable_amount_date = models.DateField(auto_now_add=True, blank=True)
     receivable_amount = models.FloatField(default=0)
     receivable_amount_date = models.DateField(auto_now_add=True, blank=True)
-    client_id = models.CharField(max_length=200,unique=True)
+    unit_trust_name = models.CharField(max_length=200,null=True)
+    unit_trust_description = models.TextField(null=True)
+    unit_bid_price = models.FloatField(null=True)
+    unit_ask_price = models.FloatField(null=True)
+    number_of_units = models.FloatField(null=True)
 
     def __str__(self):
-        return self.client_name+" ("+self.client_id+")"
+        return self.client_name+" ("+self.client_type+")"
     
     @property
     def purchasing_power(self):
-        return self.maximum_margin+self.margin_account_balance
-
-
-
-
-class CustodyClientManager(models.Manager):
-    def get_queryset(self):
-        return super().get_queryset().filter(client_type='custodian')
-
-class CustodyClient(Client):
-    objects = CustodyClientManager()
-    class Meta:
-        proxy = True
+        return self.maximum_margin+self.margin_account_balance+self.cash_balance
 
 class ClientBalance(models.Model):
-    client = models.ForeignKey(Client,on_delete=PROTECT)
+    client = models.ForeignKey(CustodyClient,on_delete=PROTECT)
     value_date = models.DateField(auto_now_add=True, blank=True)
     pf_value = models.FloatField()
     margin_value = models.FloatField()
     margin_balance = models.FloatField(null=True)
     pf_cost = models.FloatField()
+    unit_bid_price = models.FloatField(null=True)
+    unit_ask_price = models.FloatField(null=True)
+    number_of_units = models.FloatField(null=True)
 
-# from custodian.models import *
-# import datetime
-# import pandas as pd
-# eq=pd.read_csv("C:/Users/Dimuthu/Downloads/eq.csv",header=None,dtype={4:str}) 
-# eq['security_id'] = eq[[2,3,4]].agg('-'.join, axis=1)
-# for index,row in eq.iterrows():
-#   e = ListedEquity(ticker=row['security_id'],company_name=row[11],current_price=row[9],current_price_date=datetime.date.today(),in_sl20=False)
-#   e.save()
+
 class ListedEquity(models.Model):
     ticker = models.CharField(max_length=20)
     company_name = models.CharField(max_length=100)
@@ -121,7 +110,7 @@ class StockBroker(models.Model):
 class EquityTrade(models.Model):
     #tr = EquityTrade(client=CustodyClient.objects.get(id=1),stock=ListedEquity.objects.get(id=1),trade_price=200,trade_quantity=2000,trade_direction='buy',broker=StockBroker.objects.get(id=1),trade_date=datetime.date.today())
     DIRECTION = [('buy','Buy'),('sell','Sell')]
-    client = models.ForeignKey(Client,on_delete=PROTECT)
+    client = models.ForeignKey(CustodyClient,on_delete=PROTECT)
     stock = models.ForeignKey(ListedEquity,on_delete=PROTECT)
     trade_price = models.FloatField()
     trade_quantity = models.FloatField()
@@ -190,7 +179,7 @@ class EquityTrade(models.Model):
 
 
 class EquityHolding(models.Model):
-    client = models.ForeignKey(Client,on_delete=PROTECT)
+    client = models.ForeignKey(CustodyClient,on_delete=PROTECT)
     stock = models.ForeignKey(ListedEquity,on_delete=PROTECT)
     quantity = models.FloatField()
     cost_basis = models.FloatField()
@@ -211,7 +200,7 @@ class EquityHolding(models.Model):
 
 
 class MarginAccount(models.Model):
-    client = models.ForeignKey(Client,on_delete=PROTECT)
+    client = models.ForeignKey(CustodyClient,on_delete=PROTECT)
     current_account_sweep = models.BooleanField(default=False)
     trade = models.ForeignKey(EquityTrade,on_delete=CASCADE,null=True)
     trade_date = models.DateField()
@@ -219,8 +208,14 @@ class MarginAccount(models.Model):
     debit = models.BooleanField(null=True)
     amount = models.FloatField()
 
+class CurrentAccount(models.Model):
+    client = models.ForeignKey(CustodyClient,on_delete=PROTECT)
+    transaction_date = models.DateField()
+    amount = models.FloatField()
+    narration = models.CharField(max_length=200)
+
 class CDSAccount(models.Model):
-    client = models.ForeignKey(Client,on_delete=PROTECT)
+    client = models.ForeignKey(CustodyClient,on_delete=PROTECT)
     balance_transfer_to_CDS = models.BooleanField(default=False)
     trade = models.ForeignKey(EquityTrade,on_delete=CASCADE)
     trade_date = models.DateField()
@@ -229,7 +224,7 @@ class CDSAccount(models.Model):
     amount = models.FloatField()
 
 class ClientHistory(models.Model):
-    client = models.ForeignKey(Client,on_delete=PROTECT)
+    client = models.ForeignKey(CustodyClient,on_delete=PROTECT)
     portfolio_value = models.FloatField()
     margin_balance = models.FloatField()
 
