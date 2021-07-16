@@ -154,8 +154,12 @@ cb = ClientBalance.objects.all()
 for c in cb:
      c.value_date = c.value_date-timedelta(days=1)
      c.save()
-
-
+'''
+h = UnitTrustHoldingHistory.objects.all()
+for i in h:
+    i.value_date = i.value_date - timedelta(days=1)
+    i.save()
+'''
 ma = MarginAccount(
     client = CustodyClient.objects.filter(cds_no_cse='11130-LC-00')[0],
     trade_date = date.today() - timedelta(days=1),

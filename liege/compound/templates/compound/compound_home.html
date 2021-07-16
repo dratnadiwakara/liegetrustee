@@ -16,7 +16,7 @@ Home
     
     {% for sec in unittrustholdings %}
     
-        <div class="card2" onclick="location.href='http://www.example.com';" style="cursor:pointer;">
+        <div class="card2" onclick="location.href='/compound/holding/{{sec.id}}/';" style="cursor:pointer;">
         <div class="card-header"><span class="title"><h4>{{sec.nick_name}}-# {{sec.id}}</h4></span> <span class="value"><h4><b>{{sec.value}}</b></h4></span></div>
         <div class="card-body">
             <b>Portfolio:</b> {{sec.unit_trust.client_name}}

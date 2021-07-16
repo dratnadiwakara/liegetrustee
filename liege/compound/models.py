@@ -58,6 +58,7 @@ class Transaction(models.Model):
     ('transfer','Fund transfer to investor')]
     unit_trust_holding = models.ForeignKey(UnitTrustHolding,on_delete=PROTECT)
     transaction_type = models.CharField(choices=TRANS_TYPE,max_length=50)
+    transaction_date = models.DateField(auto_now_add=True, blank=True)
     purchase_amount = models.FloatField(null=True,blank=True)
     purchase_price = models.FloatField(null=True)
     number_of_units_purchased = models.FloatField(null=True)

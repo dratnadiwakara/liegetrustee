@@ -1,0 +1,61 @@
+{% extends "compound/base_compound.html" %}
+
+{% block title %}
+View PF
+{% endblock title %}
+
+
+{% block chartjs %}
+$(document).ready(function(){
+    var ctx = document.getElementById('myChart');
+    var myChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [{% for i in dates %}'{{i}}',{% endfor %}],
+            datasets: [{
+                label: 'Portfolio Value',
+                data: [ {% for i in pf_value %}'{{i}}',{% endfor %}],
+                borderWidth: 2,
+                borderColor: 'rgba(211, 77, 67, 1)',
+                backgroundColor:'rgba(213, 101, 92, 1)',
+                fill:false,
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+});
+{% endblock chartjs %}    
+{% load crispy_forms_tags %} 
+{% load humanize %}
+{% block content %}
+<h3>{{holding.nick_name}} - {{holding.id}}</h3>
+<h4>{{holding.unit_trust_investor}}</h4>
+<hr/>
+<b>Portfolio: </b>{{holding.number_of_units}} units at {{holding.unit_trust.unit_ask_price}} = {{holding.value}}
+
+<canvas id="myChart" width="500" height="250"></canvas>
+
+<div class="row align-items-center justify-content-center">
+    <a class="btn btn-primary" href="#" role="button">Add more units</a> &nbsp; &nbsp; <a class="btn btn-primary" href="#" role="button">Redeem units</a>
+    </div>
+<br/>
+<br/>
+<h4>Transaction History</h4>
+
+{% if transactions %}
+    <table class="table table-striped table-bordered dataTable showtable" style="width: 100%;" >
+        <tbody>
+            {% for sec in transactions %}
+                <tr><td>{{sec.transaction_date}}-{{sec.transaction_type}} - {{sec.purchase_amount|floatformat:0|intcomma}}{{sec.redemption_amount|floatformat:2|intcomma}}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endif %}
+{% endblock content %}
