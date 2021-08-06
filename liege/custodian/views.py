@@ -174,6 +174,21 @@ def uploaddocs(request):
         #### warnings if all the above files have not been updated
         clients = CustodyClient.objects.all()
         for cl in clients:
+            
+            daydiff = datetime.date.today()- cl.portfolio_value_date
+            daydiff = daydiff.days
+
+            #### add fee transfer to custodian dash board
+
+            # Margin Interest
+            if cl.margin_interest_rate_type=='awplr':
+                rate = Constant.objects.get(const_name="awplr")+cl.margin_interest_rate_spread
+                ac = AccruedCharge(client=cl,receipient=FeeReceipient.objects.filter(receipient_name="Margin Lender")[0],fee_type="margininterest",fee_amount=rate*cl.margin_account_balance*daydiff/365)
+                ac.save()
+            elif cl.margin_interest_rate_type=='fixed':
+                ac = AccruedCharge(client=cl,receipient=FeeReceipient.objects.filter(receipient_name="Margin Lender")[0],fee_type="margininterest",fee_amount=cl.margin_interest_rate_spread*cl.margin_account_balance*daydiff/365)
+                ac.save()
+
             cl.margin_account_balance = MarginAccount.objects.filter(client=cl).aggregate(Sum('amount'))['amount__sum']
             if(cl.margin_account_balance==None):
                 cl.margin_account_balance=0
@@ -189,6 +204,9 @@ def uploaddocs(request):
                 margin_value = margin_value+h.marginvalue
                 pf_cost = pf_cost+h.cost_basis*h.quantity
             
+            cl.equity_pf_value = pf_value
+            
+
             # cash
             cl.cash_balance = CurrentAccount.objects.filter(client=cl).aggregate(Sum('amount'))['amount__sum']
             pf_value = pf_value + cl.cash_balance
@@ -202,12 +220,24 @@ def uploaddocs(request):
             cb.save()
             
             cl.portfolio_value = pf_value 
+            cl.portfolio_value_date = datetime.date.today()
             cl.maximum_margin = margin_value
             cl.save()
             #### set payable amount
             #### set receivable amount
-            #### add margin interest as an entry to MarginAccount
-        
+
+
+            if request.POST['is_lastdayofmonth']=='lastdayofmonth':
+                if cl.custodian_fee_type=='fixed':
+                    ac = AccruedCharge(client=cl,receipient=FeeReceipient.objects.filter(receipient_name="Custodian")[0],fee_type="custodyfee",fee_amount=cl.custodian_fee_fixed_value/12)
+                    ac.save()
+                elif cl.custodian_fee_type=='flatpct':
+                    ac = AccruedCharge(client=cl,receipient=FeeReceipient.objects.filter(receipient_name="Custodian")[0],fee_type="custodyfee",fee_amount=cl.custodian_fee_pct_value*cl.portfolio_value/12)
+                    ac.save()
+                else:
+                    #### add fee calculation for slabstotasses and slabsbyassettype categories
+                    pass
+
         holdings = UnitTrustHolding.objects.all()
         for hl in holdings:
             uthh = UnitTrustHoldingHistory(unit_trust_holding=hl,number_of_units=hl.number_of_units,unit_price = hl.unit_trust.unit_ask_price)

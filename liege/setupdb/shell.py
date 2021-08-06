@@ -7,6 +7,43 @@ import datetime
 import pandas as pd
 import numpy as np
 
+eq=pd.read_csv("C:/Users/Dimuthu/Downloads/eq.csv",header=None,dtype={4:str}) 
+eq['security_id'] = eq[[2,3,4]].agg('-'.join, axis=1)
+for index,row in eq.iterrows():
+  e = ListedEquity(ticker=row['security_id'],company_name=row[11],current_price=row[9],current_price_date=datetime.date.today(),in_sl20=False)
+  e.save()
+
+const = Constant(const_name='awplr',const_value=0.07)
+const.save()
+
+feerecep = FeeReceipient(
+    receipient_name="Liege",
+    bank_account_no=51616116516,
+    bank_name="NTB",
+    account_branch="Nawala",
+)
+feerecep.save()
+
+feerecep = FeeReceipient(
+    receipient_name="Custodian",
+    bank_account_no=516161516,
+    bank_name="COMB",
+    account_branch="Nawala",
+)
+feerecep.save()
+
+
+feerecep = FeeReceipient(
+    receipient_name="Margin Lender",
+    bank_account_no=516161516,
+    bank_name="HNB",
+    account_branch="Nawala",
+)
+feerecep.save()
+
+
+
+
 utinv = UnitTrustInvestor(
     firstname = "UT Inve FN",
     lastname =  "UT Inve LN",
@@ -32,6 +69,7 @@ cc = CustodyClient(
     margin_interest_rate_spread = 0.25,
     current_account_number = 1000,
     loan_account_number = 1001,
+    custodian_fee_fixed_value=0.01,
 )
 
 cc.save()
@@ -53,6 +91,8 @@ cc = CustodyClient(
     unit_bid_price = 10,
     unit_ask_price = 10,
     number_of_units = 0,
+    custodian_fee_fixed_value=0.01,
+    fee_receipient = FeeReceipient.objects.get(id=1),
 )
 
 cc.save()
@@ -74,6 +114,8 @@ cc = CustodyClient(
     unit_bid_price = 10,
     unit_ask_price = 10,
     number_of_units = 0,
+    custodian_fee_fixed_value=0.01,
+    fee_receipient = FeeReceipient.objects.get(id=1),
 )
 
 cc.save()
@@ -96,6 +138,8 @@ cc = CustodyClient(
     unit_bid_price = 10,
     unit_ask_price = 10,
     number_of_units = 0,
+    custodian_fee_fixed_value=0.01,
+    fee_receipient = FeeReceipient.objects.get(id=1),
 )
 
 cc.save()

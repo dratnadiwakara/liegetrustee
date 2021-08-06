@@ -1,8 +1,0 @@
-investor_id_no,investment_date_year,investment_date_month,investment_date_date,maturity_date_year,maturity_date_month,maturity_date_date,days_to_maturity,investment_amount,interest_rate_type,fixed_interest_rate,variable_rate_spread,variable_rate_reset_freq,variable_rate_floor,variable_rate_cap,maturity_value
-1,2021,6,10,2021,7,6,26,1000000,1,5,,,,,1003561.644
-1,2021,6,10,2021,8,6,57,2000000,1,5.5,,,,,2017178.082
-2,2021,6,10,2021,9,6,88,3000000,1,6,,,,,3043397.26
-2,2021,6,10,2021,10,6,118,3500000,1,6.5,,,,,3573547.945
-3,2021,6,10,2021,10,6,118,1000000,1,6.5,,,,,1021013.699
-3,2021,6,10,2021,11,6,149,2500000,1,7,,,,,2571438.356
-3,2021,6,10,2021,12,6,179,4000000,1,7.4,,,,,4145161.644

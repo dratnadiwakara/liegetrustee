@@ -67,7 +67,8 @@ Upload Documents
               <p class="card-text">
                 <form method="POST" enctype="multipart/form-data" > {% csrf_token %}
                     <input type="hidden" name="doctype" value="clientbalance"/>
-                    <button type="submit",name="save" class="btn btn-success">Upload</button>
+                    <input type="checkbox" name="is_lastdayofmonth" value="lastdayofmonth"/>
+                    <button type="submit",name="save" class="btn btn-success">Calculate</button>
                     <br/>Last updated date
                 </form>
               </p>

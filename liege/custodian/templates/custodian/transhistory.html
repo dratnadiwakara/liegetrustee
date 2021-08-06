@@ -30,6 +30,12 @@ Create New Securitization
                     <th>Fees</th>
                     <th>Net Amount</th>
                     <th>Balance</th>
+                    <th>Dispute 
+                    <!-- #### add the ability to dispute if the trade is not more than 3 days old 
+                     if disputed, trade should be reversed, pf balance, margin, balance, cash balance should all be reversed.
+                     algo, add the opposite trade with same values and run client balances.
+                    -->
+                    </th>
                 </tr></thead>
                 <tbody>
                     {% for sec in transhistory %}<tr>
@@ -44,6 +50,7 @@ Create New Securitization
                     <td>{{sec.trade.fees}}</td>
                     <td>{{sec.trade.netamount}}</td>
                     <td>ADD BAL</td>
+                    <td>Add button</td>
                     </tr>{% endfor %}
                 </tbody>
             </table>

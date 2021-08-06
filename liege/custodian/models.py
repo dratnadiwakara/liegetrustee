@@ -25,12 +25,27 @@ Update ClientHistory
 History tables for All Uploads, date,time, file, username
 """
 
+class FeeReceipient(models.Model):
+    receipient_name = models.CharField(max_length=100)
+    bank_account_no = models.PositiveIntegerField()
+    bank_name = models.CharField(max_length=50)
+    account_branch = models.CharField(max_length=50)
+
+class Constant(models.Model):
+    const_name = models.CharField(max_length=100,primary_key=True)
+    const_value = models.FloatField()
+    last_updated = models.DateTimeField(auto_now=True)
+
 class CustodyClient(models.Model):
     
     CLIENT_TYPES = [('custodian','Custodian Client'),
                     
                     ('unittrust','Unit Trust'),]
     RISK_LEVEL = [('low','Low'),('moderate',"Moderate"),('high','High')]
+
+    FEE_TYPE = [('fixed',"Flat fee"),('flatpct',"Flat Rate on AUM"),('slabstotasses','Variable slabs for AUM'),('slabsbyassettype','Variable slabs by instrument')]
+
+    MARGIN_RATE_TYPE = [('fixed','Fixed'),('awplr','AWPLR+')]
 
     client_name = models.CharField(max_length=200)
     client_address = models.CharField(max_length=200)
@@ -40,19 +55,19 @@ class CustodyClient(models.Model):
     client_birthday = models.DateField(blank=True,null=True)
     cds_no_cse = models.CharField(max_length=50,unique=True)#### 
     cds_no_cbsl = models.CharField(max_length=50,unique=True) #### 
-    margin_interest_rate_spread = models.FloatField(blank=True,null=True)
     current_account_number = models.PositiveIntegerField(blank=True,null=True,unique=True)
     loan_account_number = models.PositiveIntegerField(blank=True,null=True,unique=True)
     shariah_compliant = models.BooleanField(default=False)
     risk_appetite = models.CharField(max_length=200,choices=RISK_LEVEL,default="moderate")
     target_returns = models.FloatField(default=0.1)
     cash_balance = models.FloatField(default=0,null=True)
+    equity_pf_value = models.FloatField(default=0,null=True)
     portfolio_value = models.FloatField(default=0,null=True)
     portfolio_value_date = models.DateField(null=True)
     margin_account_balance = models.FloatField(default=0)
     margin_account_balance_date = models.DateField(auto_now_add=True, blank=True)
     maximum_margin = models.FloatField(default=0)
-    maximum_margin_date = models.DateField(auto_now_add=True, blank=True)
+    maximum_margin_date = models.DateField(auto_now=True, blank=True)
     payable_amount = models.FloatField(default=0)
     payable_amount_date = models.DateField(auto_now_add=True, blank=True)
     receivable_amount = models.FloatField(default=0)
@@ -62,13 +77,34 @@ class CustodyClient(models.Model):
     unit_bid_price = models.FloatField(null=True)
     unit_ask_price = models.FloatField(null=True)
     number_of_units = models.FloatField(null=True)
-
+    custodian_fee_type = models.CharField(max_length=200,choices=FEE_TYPE,default="fixed")
+    custodian_fee_fixed_value = models.PositiveIntegerField(default=0,null=True)
+    custodian_fee_pct_value = models.PositiveIntegerField(default=0,null=True)
+    fee_receipient = models.ForeignKey(FeeReceipient,on_delete=CASCADE,null=True)
+    fund_manager_fee_rate = models.FloatField(default=0.02)
+    margin_interest_rate_type = models.CharField(max_length=20,choices=MARGIN_RATE_TYPE)
+    margin_interest_rate_spread = models.FloatField(blank=True,null=True)
+    
     def __str__(self):
         return self.client_name+" ("+self.client_type+")"
     
     @property
     def purchasing_power(self):
         return self.maximum_margin+self.margin_account_balance+self.cash_balance
+
+
+
+class AccruedCharge(models.Model):
+    FEE_TYPES = [('custodyfee','Custody Fee'),('margininterest','Margin Interest')]
+    client = models.ForeignKey(CustodyClient,on_delete=PROTECT)
+    fee_date = models.DateField(auto_now_add=True, blank=True)
+    receipient = models.ForeignKey(FeeReceipient,on_delete=CASCADE)
+    fee_type = models.CharField(max_length=200,choices=FEE_TYPES)
+    fee_amount = models.FloatField()
+
+class CommonVariable(models.Model):
+    variable_name = models.CharField(max_length=50,primary_key=True)
+    variable_value = models.FloatField()
 
 class ClientBalance(models.Model):
     client = models.ForeignKey(CustodyClient,on_delete=PROTECT)
@@ -84,6 +120,7 @@ class ClientBalance(models.Model):
 
 class ListedEquity(models.Model):
     ticker = models.CharField(max_length=20)
+    isin = models.CharField(max_length=200,null=True)
     company_name = models.CharField(max_length=100)
     current_price = models.FloatField()
     current_price_date = models.DateField()
@@ -126,6 +163,7 @@ class EquityTrade(models.Model):
     stamp_duty = models.FloatField(default=0)
     govt_cess = models.FloatField(default=0)
     trx_contract = models.CharField(primary_key=True,max_length=200)
+    disputed = models.BooleanField(default=False)
 
     @property
     def amount(self):
